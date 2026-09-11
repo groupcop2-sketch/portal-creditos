@@ -4,6 +4,7 @@ import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
+import { FeedbackAlert, inferFeedbackKind, type FeedbackKind } from './FeedbackAlert';
 import { RichDocumentEditor } from './RichDocumentEditor';
 import { PdfFieldMapper } from './PdfFieldMapper';
 import {
@@ -978,8 +979,14 @@ function App() {
   const [portalCreditoForm, setPortalCreditoForm] = useState<PortalCreditoFormState>(initialPortalCreditoForm);
   const [portalSimulacion, setPortalSimulacion] = useState<SimulacionCredito | null>(null);
   const [portalDetalleVisible, setPortalDetalleVisible] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessageText] = useState('');
+  const [messageKind, setMessageKind] = useState<FeedbackKind>('info');
   const [loading, setLoading] = useState(false);
+  const setMessage = (text: string, kind?: FeedbackKind) => {
+    setMessageText(text);
+    setMessageKind(text ? (kind ?? inferFeedbackKind(text)) : 'info');
+  };
+  const clearMessage = () => setMessage('');
   const isPortalRoute = window.location.pathname.startsWith('/portal');
   const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
     localStorage.getItem('creditos.theme.mode') === 'dark' ? 'dark' : 'light'
@@ -1389,6 +1396,16 @@ function App() {
     localStorage.setItem('creditos.theme.mode', themeMode);
     localStorage.setItem('creditos.theme.palette', paletteKey);
   }, [activePalette, paletteKey, themeMode]);
+
+  useEffect(() => {
+    if (!message) return;
+    const persistInline = isPortalRoute ? !portalCliente : !session;
+    if (persistInline) return;
+    const timeout = window.setTimeout(() => {
+      setMessageText('');
+    }, messageKind === 'error' ? 8000 : 4500);
+    return () => window.clearTimeout(timeout);
+  }, [isPortalRoute, message, messageKind, portalCliente, session]);
 
   const reloadSecurityData = async () => {
     if (!session) return;
@@ -2177,6 +2194,10 @@ function App() {
 
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
+    if (!authForm.username.trim() || !authForm.password) {
+      setMessage('Usuario y contrasena son obligatorios', 'error');
+      return;
+    }
     setLoading(true);
     setMessage('');
 
@@ -2189,7 +2210,7 @@ function App() {
       setAuthForm({ username: '', password: '' });
       setMessage('Sesion iniciada');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar sesion');
+      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar sesion', 'error');
     } finally {
       setLoading(false);
     }
@@ -2269,6 +2290,10 @@ function App() {
 
   const handlePortalLogin = async (event: FormEvent) => {
     event.preventDefault();
+    if (!portalLoginForm.identificacion.trim() || !portalLoginForm.password) {
+      setMessage('Identificacion y contrasena son obligatorios', 'error');
+      return;
+    }
     setLoading(true);
     setMessage('');
     try {
@@ -2279,7 +2304,7 @@ function App() {
       setPortalLoginForm(initialPortalLoginForm);
       setMessage('Sesion de cliente iniciada');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar sesion en el portal');
+      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar sesion en el portal', 'error');
     } finally {
       setLoading(false);
     }
@@ -3743,8 +3768,21 @@ function App() {
               ) : portalMode === 'login' ? (
                 <form className="portal-form" onSubmit={handlePortalLogin}>
                   <div className="field-grid">
-                    <input value={portalLoginForm.identificacion} onChange={(event) => setPortalLoginForm((current) => ({ ...current, identificacion: event.target.value }))} placeholder="Identificacion o correo" />
-                    <input type="password" autoComplete="current-password" value={portalLoginForm.password} onChange={(event) => setPortalLoginForm((current) => ({ ...current, password: event.target.value }))} placeholder="Contrasena" />
+                    <input
+                      value={portalLoginForm.identificacion}
+                      onChange={(event) => setPortalLoginForm((current) => ({ ...current, identificacion: event.target.value }))}
+                      placeholder="Identificacion o correo"
+                      autoComplete="username"
+                      aria-invalid={Boolean(message) && messageKind === 'error'}
+                    />
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      value={portalLoginForm.password}
+                      onChange={(event) => setPortalLoginForm((current) => ({ ...current, password: event.target.value }))}
+                      placeholder="Contrasena"
+                      aria-invalid={Boolean(message) && messageKind === 'error'}
+                    />
                     <button type="submit" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
                   </div>
                 </form>
@@ -3776,7 +3814,25 @@ function App() {
               )}
             </section>
           )}
-          {message && <p className="form-message">{message}</p>}
+          {message ? (
+            portalCliente ? (
+              <div className="feedback-toast-host">
+                <FeedbackAlert
+                  message={message}
+                  kind={messageKind}
+                  variant="toast"
+                  onDismiss={clearMessage}
+                />
+              </div>
+            ) : (
+              <FeedbackAlert
+                message={message}
+                kind={messageKind}
+                title={messageKind === 'error' ? 'No se pudo completar la accion' : undefined}
+                onDismiss={clearMessage}
+              />
+            )
+          ) : null}
         </section>
       </div>
     );
@@ -3824,6 +3880,9 @@ function App() {
                 value={authForm.username}
                 onChange={(event) => setAuthForm((current) => ({ ...current, username: event.target.value }))}
                 placeholder="admin o correo@dominio.com"
+                autoComplete="username"
+                aria-invalid={Boolean(message) && messageKind === 'error'}
+                aria-describedby={message ? 'login-feedback' : undefined}
               />
             </label>
             <label>
@@ -3833,10 +3892,22 @@ function App() {
                 value={authForm.password}
                 onChange={(event) => setAuthForm((current) => ({ ...current, password: event.target.value }))}
                 placeholder="********"
+                autoComplete="current-password"
+                aria-invalid={Boolean(message) && messageKind === 'error'}
+                aria-describedby={message ? 'login-feedback' : undefined}
               />
             </label>
             <button type="submit" disabled={loading}>{loading ? 'Ingresando...' : 'Ingresar'}</button>
-            <p className="message-line">{message}</p>
+            <div id="login-feedback">
+              {message ? (
+                <FeedbackAlert
+                  message={message}
+                  kind={messageKind}
+                  title={messageKind === 'error' ? 'No se pudo iniciar sesion' : undefined}
+                  onDismiss={clearMessage}
+                />
+              ) : null}
+            </div>
           </form>
         </section>
       </div>
@@ -6585,9 +6656,17 @@ function App() {
             )}
           </section>
         )}
-
-        <p className="message-line">{message}</p>
       </main>
+      {message ? (
+        <div className="feedback-toast-host">
+          <FeedbackAlert
+            message={message}
+            kind={messageKind}
+            variant="toast"
+            onDismiss={clearMessage}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1136,5 +1136,11 @@ export const api = {
   listPortalProductos: (token: string) => request<PortalProductoCredito[]>('/api/v1/portal/productos', {}, token),
   listPortalCreditos: (token: string) => request<PortalCreditosResponse>('/api/v1/portal/creditos', {}, token),
   simularPortalCredito: (token: string, body: unknown) => request<SimulacionCredito>('/api/v1/portal/simular', { method: 'POST', body: JSON.stringify(body) }, token),
-  crearSolicitudPortal: (token: string, body: unknown) => request<CreditoRow>('/api/v1/portal/solicitudes', { method: 'POST', body: JSON.stringify(body) }, token)
+  crearSolicitudPortal: (token: string, body: unknown) => request<CreditoRow & { jumio?: any }>('/api/v1/portal/solicitudes', { method: 'POST', body: JSON.stringify(body) }, token),
+  iniciarVerificacionJumio: (token: string, creditoId: number) =>
+    request<any>('/api/v1/portal/jumio/iniciar', { method: 'POST', body: JSON.stringify({ creditoId }) }, token),
+  obtenerEstadoVerificacionJumio: (token: string, creditoId: number) =>
+    request<any>(`/api/v1/portal/jumio/estado/${creditoId}`, {}, token),
+  simularCompletarJumio: (token: string, creditoId: number, decision: 'PASSED' | 'REJECTED' = 'PASSED') =>
+    request<any>('/api/v1/portal/jumio/simular-resultado', { method: 'POST', body: JSON.stringify({ creditoId, decision }) }, token)
 };

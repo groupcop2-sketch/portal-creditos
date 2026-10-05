@@ -1151,8 +1151,10 @@ export const api = {
     request<any>(`/api/v1/portal/jumio/estado/${creditoId}`, {}, token),
   simularCompletarJumio: (token: string, creditoId: number, decision: 'PASSED' | 'REJECTED' = 'PASSED') =>
     request<any>('/api/v1/portal/jumio/simular-resultado', { method: 'POST', body: JSON.stringify({ creditoId, decision }) }, token),
-  obtenerConfigJumio: () =>
-    request<{ jumioConfigurado: boolean; datacenter: string; permiteCargaManual: boolean }>('/api/v1/portal/jumio/config'),
+  obtenerConfigJumio: (creditoId?: number) =>
+    request<{ jumioConfigurado: boolean; datacenter: string; permiteCargaManual: boolean; idFinanciera?: number; nombreFinanciera?: string }>(
+      `/api/v1/portal/jumio/config${creditoId ? `?creditoId=${creditoId}` : ''}`
+    ),
   cargarDocumentosJumio: (
     token: string,
     body: {

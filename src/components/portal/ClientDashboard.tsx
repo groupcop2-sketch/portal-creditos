@@ -43,14 +43,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const [laborLoading, setLaborLoading] = useState(false);
   const [laborError, setLaborError] = useState('');
 
-  useEffect(() => {
-    api.obtenerConfigJumio()
-      .then((cfg) => setHasJumioConfig(Boolean(cfg?.jumioConfigurado)))
-      .catch(() => setHasJumioConfig(false));
-  }, []);
-
   // Latest active credit for the pipeline visualizer
   const latestCredito = creditosData.creditos[0] || null;
+
+  useEffect(() => {
+    api.obtenerConfigJumio(latestCredito?.id)
+      .then((cfg) => setHasJumioConfig(Boolean(cfg?.jumioConfigurado)))
+      .catch(() => setHasJumioConfig(false));
+  }, [latestCredito?.id]);
 
   const getInitials = (name?: string) => {
     if (!name) return 'CL';

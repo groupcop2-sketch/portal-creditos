@@ -343,6 +343,11 @@ export default function App() {
 
       // If user is not yet logged in, register first or login
       if (!activeAuthToken) {
+        const defaultTipId = catalogs.tiposIdentificacion.find(t => t.sigla === 'CC' || t.descripcion.toLowerCase().includes('ciudadan'))?.id
+          || catalogs.tiposIdentificacion[0]?.id
+          || 6;
+        const defaultContratoId = catalogs.tiposContrato[0]?.id || 1;
+
         const regRes = await api.registerPortalClient({
           codigoEmpresa: formData.codigoEmpresa || 'GENERAL',
           identificacion: formData.identificacion,
@@ -354,12 +359,12 @@ export default function App() {
           telefono: formData.telefono,
           password: formData.password || `${formData.identificacion}*2026`,
           cargo: formData.cargo || 'Funcionario',
-          idTipoContrato: formData.idTipoContrato || '1',
+          idTipoContrato: formData.idTipoContrato ? Number(formData.idTipoContrato) : defaultContratoId,
           fechaIngreso: formData.fechaIngreso || new Date().toISOString().slice(0, 10),
           salario: formData.salario || '3500000',
           neto: formData.neto || formData.salario || '3000000',
           tieneEmbargos: Boolean(formData.tieneEmbargos),
-          idTipoIdentificacion: formData.idTipoIdentificacion || '1'
+          idTipoIdentificacion: formData.idTipoIdentificacion ? Number(formData.idTipoIdentificacion) : defaultTipId
         });
 
         if (regRes && regRes.token) {

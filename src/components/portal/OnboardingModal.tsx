@@ -103,7 +103,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         setIdProductoCredito(String(productos[0].id));
       }
       if (catalogs.tiposIdentificacion.length > 0 && !idTipoIdentificacion) {
-        setIdTipoIdentificacion(String(catalogs.tiposIdentificacion[0].id));
+        const cc = catalogs.tiposIdentificacion.find(t => t.sigla === 'CC' || t.descripcion.toLowerCase().includes('ciudadan'));
+        setIdTipoIdentificacion(String(cc?.id || catalogs.tiposIdentificacion[0].id));
       }
       if (catalogs.tiposContrato.length > 0 && !idTipoContrato) {
         setIdTipoContrato(String(catalogs.tiposContrato[0].id));
@@ -220,6 +221,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     setErrorMessage('');
 
     try {
+      const defaultTipId = catalogs.tiposIdentificacion.find(t => t.sigla === 'CC' || t.descripcion.toLowerCase().includes('ciudadan'))?.id
+        || catalogs.tiposIdentificacion[0]?.id
+        || 6;
+      const defaultContratoId = catalogs.tiposContrato[0]?.id || 1;
+
       const payload = {
         monto,
         montoSolicitado: monto,
@@ -227,7 +233,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         idProductoCredito: Number(idProductoCredito) || selectedProd?.id,
         codigoVendedor: codigoVendedor ? codigoVendedor.toUpperCase() : null,
         // personal
-        idTipoIdentificacion: idTipoIdentificacion ? Number(idTipoIdentificacion) : 1,
+        idTipoIdentificacion: idTipoIdentificacion ? Number(idTipoIdentificacion) : defaultTipId,
         identificacion,
         primerNombre,
         segundoNombre: segundoNombre || null,
@@ -239,7 +245,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         // labor
         codigoEmpresa: codigoEmpresa.toUpperCase(),
         cargo,
-        idTipoContrato: idTipoContrato ? Number(idTipoContrato) : 1,
+        idTipoContrato: idTipoContrato ? Number(idTipoContrato) : defaultContratoId,
         fechaIngreso: fechaIngreso || new Date().toISOString().slice(0, 10),
         salario: Number(salario),
         neto: Number(neto || salario),

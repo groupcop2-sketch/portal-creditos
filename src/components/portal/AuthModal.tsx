@@ -31,7 +31,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Register form
-  const [regTipoDoc, setRegTipoDoc] = useState(String(catalogs.tiposIdentificacion[0]?.id || '1'));
+  const defaultTipId = catalogs.tiposIdentificacion.find(t => t.sigla === 'CC' || t.descripcion.toLowerCase().includes('ciudadan'))?.id
+    || catalogs.tiposIdentificacion[0]?.id
+    || 6;
+  const [regTipoDoc, setRegTipoDoc] = useState(String(defaultTipId));
+
+  React.useEffect(() => {
+    if (catalogs.tiposIdentificacion.length > 0) {
+      const cc = catalogs.tiposIdentificacion.find(t => t.sigla === 'CC' || t.descripcion.toLowerCase().includes('ciudadan'));
+      setRegTipoDoc(String(cc?.id || catalogs.tiposIdentificacion[0].id));
+    }
+  }, [catalogs.tiposIdentificacion]);
+
   const [regIdentificacion, setRegIdentificacion] = useState('');
   const [regPrimerNombre, setRegPrimerNombre] = useState('');
   const [regSegundoNombre, setRegSegundoNombre] = useState('');
@@ -86,7 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMessage('');
     try {
       const ok = await onRegister({
-        idTipoIdentificacion: Number(regTipoDoc) || 1,
+        idTipoIdentificacion: Number(regTipoDoc) || defaultTipId,
         identificacion: regIdentificacion,
         primerNombre: regPrimerNombre,
         segundoNombre: regSegundoNombre || null,

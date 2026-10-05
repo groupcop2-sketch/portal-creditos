@@ -81,6 +81,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   // Labor data
   const [codigoEmpresa, setCodigoEmpresa] = useState('');
   const [cargo, setCargo] = useState('');
+  const [isCustomCargo, setIsCustomCargo] = useState(false);
   const [idTipoContrato, setIdTipoContrato] = useState<string>('');
   const [fechaIngreso, setFechaIngreso] = useState('');
   const [salario, setSalario] = useState('');
@@ -118,6 +119,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         setTelefono(cliente.telefono || '');
         setCodigoEmpresa(cliente.codigoEmpresa || '');
         setCargo(cliente.cargo || '');
+        setIsCustomCargo(false);
         setSalario(cliente.salario ? String(cliente.salario) : '');
         setNeto(cliente.neto ? String(cliente.neto) : '');
         if (cliente.perfilCompleto) {
@@ -125,6 +127,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         }
       } else {
         setCurrentStep(1);
+        setIsCustomCargo(false);
       }
       setErrorMessage('');
       setConsecutivoGenerado('');
@@ -613,13 +616,55 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               <div className="form-field">
                 <label className="field-label-bold">Cargo / Ocupación *</label>
-                <input
-                  type="text"
-                  className="portal-input-text"
-                  placeholder="Ej. Analista, Asesor, Operador"
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                />
+                {!isCustomCargo ? (
+                  <select
+                    className="portal-input-select"
+                    value={cargo}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__OTRO__') {
+                        setIsCustomCargo(true);
+                        setCargo('');
+                      } else {
+                        setIsCustomCargo(false);
+                        setCargo(val);
+                      }
+                    }}
+                  >
+                    <option value="">Selecciona tu cargo / ocupación</option>
+                    {(catalogs.cargos || []).map((c) => (
+                      <option key={c.id || c.nombre} value={c.nombre}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                    {cargo && !(catalogs.cargos || []).some((c) => c.nombre.toLowerCase() === cargo.toLowerCase()) && (
+                      <option value={cargo}>{cargo}</option>
+                    )}
+                    <option value="__OTRO__">Otro / No listado</option>
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="portal-input-text"
+                      placeholder="Escribe tu cargo u ocupación"
+                      value={cargo}
+                      onChange={(e) => setCargo(e.target.value)}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="portal-btn-secondary"
+                      style={{ whiteSpace: 'nowrap', padding: '0 12px', fontSize: '12px' }}
+                      onClick={() => {
+                        setIsCustomCargo(false);
+                        setCargo('');
+                      }}
+                    >
+                      Volver a lista
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-field">

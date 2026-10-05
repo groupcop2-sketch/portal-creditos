@@ -50,6 +50,57 @@ export default function App() {
       { id: 4, nombre: 'Carrera Administrativa / Propiedad' },
       { id: 5, nombre: 'Provisionalidad' },
       { id: 6, nombre: 'Pensionado / Jubilado' }
+    ],
+    cargos: [
+      { id: 1, nombre: 'Abogado' },
+      { id: 2, nombre: 'Account Manager' },
+      { id: 3, nombre: 'Administrador' },
+      { id: 4, nombre: 'Analista' },
+      { id: 5, nombre: 'Analista de Calidad' },
+      { id: 6, nombre: 'Analista de Crédito' },
+      { id: 7, nombre: 'Analista de Nómina' },
+      { id: 8, nombre: 'Analista Financiero' },
+      { id: 9, nombre: 'Analista Operativo' },
+      { id: 10, nombre: 'Asesor Comercial' },
+      { id: 11, nombre: 'Asesor Jurídico' },
+      { id: 12, nombre: 'Asistente Administrativo' },
+      { id: 13, nombre: 'Asistente Operativo' },
+      { id: 14, nombre: 'Auxiliar Contable' },
+      { id: 15, nombre: 'Auxiliar de Bodega' },
+      { id: 16, nombre: 'Auxiliar Operativo' },
+      { id: 17, nombre: 'Comercial' },
+      { id: 18, nombre: 'Contador' },
+      { id: 19, nombre: 'Coordinador' },
+      { id: 20, nombre: 'Director Administrativo' },
+      { id: 21, nombre: 'Director Ejecutivo' },
+      { id: 22, nombre: 'Docente / Profesor' },
+      { id: 23, nombre: 'Empleado' },
+      { id: 24, nombre: 'Especialista' },
+      { id: 25, nombre: 'Gerente' },
+      { id: 26, nombre: 'Gerente General' },
+      { id: 27, nombre: 'Gerente Recursos Humanos' },
+      { id: 28, nombre: 'Ingeniero' },
+      { id: 29, nombre: 'Ingeniero Civil' },
+      { id: 30, nombre: 'Ingeniero de Sistemas' },
+      { id: 31, nombre: 'Jefe de Operaciones' },
+      { id: 32, nombre: 'Mecánico' },
+      { id: 33, nombre: 'Mecánico de Llantas' },
+      { id: 34, nombre: 'Mecánico OTR' },
+      { id: 35, nombre: 'Médico' },
+      { id: 36, nombre: 'Mensajero' },
+      { id: 37, nombre: 'Operador' },
+      { id: 38, nombre: 'Operario' },
+      { id: 39, nombre: 'Pensionado / Jubilado' },
+      { id: 40, nombre: 'Recepcionista' },
+      { id: 41, nombre: 'RTC' },
+      { id: 42, nombre: 'Secretaria' },
+      { id: 43, nombre: 'Servicios Generales' },
+      { id: 44, nombre: 'Supervisor' },
+      { id: 45, nombre: 'Técnico' },
+      { id: 46, nombre: 'Técnico de Mantenimiento' },
+      { id: 47, nombre: 'Técnico Mecánico' },
+      { id: 48, nombre: 'Tesorero' },
+      { id: 49, nombre: 'Vendedor' }
     ]
   });
 
@@ -126,7 +177,9 @@ export default function App() {
         if (catRes) {
           setCatalogs((prev) => ({
             tiposIdentificacion: catRes.tiposIdentificacion?.length ? catRes.tiposIdentificacion : prev.tiposIdentificacion,
-            tiposContrato: catRes.tiposContrato?.length ? catRes.tiposContrato : prev.tiposContrato
+            tiposContrato: catRes.tiposContrato?.length ? catRes.tiposContrato : prev.tiposContrato,
+            empresas: catRes.empresas?.length ? catRes.empresas : prev.empresas,
+            cargos: catRes.cargos?.length ? catRes.cargos : prev.cargos
           }));
         }
       } catch (err) {

@@ -22,6 +22,8 @@ interface ClientDashboardProps {
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   cliente,
   creditosData,
+  productos,
+  catalogs,
   token,
   onRefreshSession,
   onOpenNewCredit,
@@ -31,6 +33,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const [showLaborModal, setShowLaborModal] = useState(!cliente.perfilCompleto);
   const [laborCodigoEmpresa, setLaborCodigoEmpresa] = useState(cliente.codigoEmpresa || '');
   const [laborCargo, setLaborCargo] = useState(cliente.cargo || '');
+  const [isCustomLaborCargo, setIsCustomLaborCargo] = useState(false);
   const [laborSalario, setLaborSalario] = useState(cliente.salario ? String(cliente.salario) : '');
   const [laborNeto, setLaborNeto] = useState(cliente.neto ? String(cliente.neto) : '');
   const [laborTieneEmbargos, setLaborTieneEmbargos] = useState(false);
@@ -370,14 +373,57 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
               <div className="form-field full-width">
                 <label className="field-label-bold">Cargo / Ocupación *</label>
-                <input
-                  type="text"
-                  className="portal-input-text"
-                  placeholder="Ej. Analista de operaciones"
-                  value={laborCargo}
-                  onChange={(e) => setLaborCargo(e.target.value)}
-                  required
-                />
+                {!isCustomLaborCargo ? (
+                  <select
+                    className="portal-input-select"
+                    value={laborCargo}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__OTRO__') {
+                        setIsCustomLaborCargo(true);
+                        setLaborCargo('');
+                      } else {
+                        setIsCustomLaborCargo(false);
+                        setLaborCargo(val);
+                      }
+                    }}
+                    required
+                  >
+                    <option value="">Selecciona tu cargo / ocupación</option>
+                    {(catalogs.cargos || []).map((c) => (
+                      <option key={c.id || c.nombre} value={c.nombre}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                    {laborCargo && !(catalogs.cargos || []).some((c) => c.nombre.toLowerCase() === laborCargo.toLowerCase()) && (
+                      <option value={laborCargo}>{laborCargo}</option>
+                    )}
+                    <option value="__OTRO__">Otro / No listado</option>
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="portal-input-text"
+                      placeholder="Escribe tu cargo u ocupación"
+                      value={laborCargo}
+                      onChange={(e) => setLaborCargo(e.target.value)}
+                      required
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="portal-btn-secondary"
+                      style={{ whiteSpace: 'nowrap', padding: '0 12px', fontSize: '12px' }}
+                      onClick={() => {
+                        setIsCustomLaborCargo(false);
+                        setLaborCargo('');
+                      }}
+                    >
+                      Volver a lista
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="two-cols-compact">

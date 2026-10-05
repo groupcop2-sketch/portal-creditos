@@ -851,9 +851,16 @@ export type PortalCliente = {
   estado: string | null;
 };
 
+export type PortalCargoItem = {
+  id: number;
+  nombre: string;
+};
+
 export type PortalCatalogs = {
   tiposIdentificacion: IdentificationTypeRow[];
   tiposContrato: AddressCatalogItem[];
+  empresas?: Array<{ id: number; codigo: string; nombre: string }>;
+  cargos?: PortalCargoItem[];
 };
 
 export type PortalAuthResponse = {

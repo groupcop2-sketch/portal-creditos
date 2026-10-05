@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   api,
   type PortalCatalogs,
@@ -6,6 +6,7 @@ import {
   type PortalCreditosResponse,
   type PortalProductoCredito
 } from '../../api';
+import { DocumentoRostroUploader } from './DocumentoRostroUploader';
 
 interface ClientDashboardProps {
   cliente: PortalCliente;
@@ -31,6 +32,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   formatMoney
 }) => {
   const [showLaborModal, setShowLaborModal] = useState(!cliente.perfilCompleto);
+  const [showManualUploadModal, setShowManualUploadModal] = useState(false);
+  const [hasJumioConfig, setHasJumioConfig] = useState<boolean | null>(null);
   const [laborCodigoEmpresa, setLaborCodigoEmpresa] = useState(cliente.codigoEmpresa || '');
   const [laborCargo, setLaborCargo] = useState(cliente.cargo || '');
   const [isCustomLaborCargo, setIsCustomLaborCargo] = useState(false);
@@ -39,6 +42,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const [laborTieneEmbargos, setLaborTieneEmbargos] = useState(false);
   const [laborLoading, setLaborLoading] = useState(false);
   const [laborError, setLaborError] = useState('');
+
+  useEffect(() => {
+    api.obtenerConfigJumio()
+      .then((cfg) => setHasJumioConfig(Boolean(cfg?.jumioConfigurado)))
+      .catch(() => setHasJumioConfig(false));
+  }, []);
 
   // Latest active credit for the pipeline visualizer
   const latestCredito = creditosData.creditos[0] || null;
@@ -210,29 +219,38 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           {currentStageNum <= 2 && latestCredito.jumioEstado !== 'APROBADO' && !latestCredito.estado.toUpperCase().includes('ESTUDIO') && (
             <div className="pipeline-jumio-banner">
               <div className="pj-content">
-                <span className="pj-badge">🛡️ Validación de Identidad Jumio Requerida</span>
-                <p>Tu crédito requiere validación de cédula y biometría facial para avanzar al estudio de crédito.</p>
+                <span className="pj-badge">🛡️ Validación de Identidad Requerida</span>
+                <p>Tu crédito requiere validación de cédula y fotografía del rostro para avanzar al estudio de crédito.</p>
               </div>
               <div className="pj-actions">
                 <button
                   type="button"
-                  className="portal-btn-primary"
-                  onClick={async () => {
-                    try {
-                      const effectiveToken = token || localStorage.getItem('portal_client_token') || '';
-                      const res = await api.iniciarVerificacionJumio(effectiveToken, latestCredito.id);
-                      if (res?.webHref) {
-                        window.open(res.webHref, '_blank');
-                      } else {
-                        alert('No se recibió la URL de verificación de Jumio');
-                      }
-                    } catch (err: any) {
-                      alert(`Error al iniciar Jumio: ${err.message || 'Verifica la configuración del servidor'}`);
-                    }
-                  }}
+                  className="portal-btn-primary glow-pulse"
+                  onClick={() => setShowManualUploadModal(true)}
                 >
-                  Completar con Jumio ➔
+                  📷 Cargar Documento y Rostro ➔
                 </button>
+                {hasJumioConfig && (
+                  <button
+                    type="button"
+                    className="portal-btn-secondary"
+                    onClick={async () => {
+                      try {
+                        const effectiveToken = token || localStorage.getItem('portal_client_token') || '';
+                        const res = await api.iniciarVerificacionJumio(effectiveToken, latestCredito.id);
+                        if (res?.webHref) {
+                          window.open(res.webHref, '_blank');
+                        } else {
+                          alert('No se recibió la URL de verificación de Jumio');
+                        }
+                      } catch (err: any) {
+                        alert(`Error al iniciar Jumio: ${err.message || 'Verifica la configuración del servidor'}`);
+                      }
+                    }}
+                  >
+                    Validar con Jumio
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn-simulation-demo-sm"
@@ -476,6 +494,32 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                 {laborLoading ? 'Guardando...' : 'Guardar Información Laboral ➔'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Document and Face Upload Modal */}
+      {showManualUploadModal && latestCredito && (
+        <div className="onboarding-modal-overlay">
+          <div className="onboarding-modal-card doc-modal-card animate-fadeIn">
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={() => setShowManualUploadModal(false)}
+              title="Cerrar modal"
+            >
+              ✕
+            </button>
+            <DocumentoRostroUploader
+              creditoId={latestCredito.id}
+              token={token}
+              showCancelButton={true}
+              onCancel={() => setShowManualUploadModal(false)}
+              onSuccess={() => {
+                setShowManualUploadModal(false);
+                if (onRefreshSession) onRefreshSession();
+              }}
+            />
           </div>
         </div>
       )}

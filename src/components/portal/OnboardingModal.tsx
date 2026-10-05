@@ -5,6 +5,7 @@ import {
   type PortalCliente,
   type PortalProductoCredito
 } from '../../api';
+import { DocumentoRostroUploader } from './DocumentoRostroUploader';
 
 export interface OnboardingInitialData {
   monto: number;
@@ -57,6 +58,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [jumioData, setJumioData] = useState<any>(null);
   const [jumioStatus, setJumioStatus] = useState<'PENDIENTE' | 'APROBADO' | 'RECHAZADO'>('PENDIENTE');
   const [simulatingJumio, setSimulatingJumio] = useState(false);
+  const [hasJumioConfig, setHasJumioConfig] = useState<boolean | null>(null);
+  const [verificationMode, setVerificationMode] = useState<'jumio' | 'manual'>('manual');
+
 
   // Form State
   const [monto, setMonto] = useState<number>(initialData.monto || 10000000);
@@ -132,6 +136,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       }
       setErrorMessage('');
       setConsecutivoGenerado('');
+
+      api.obtenerConfigJumio()
+        .then((cfg) => {
+          setHasJumioConfig(Boolean(cfg?.jumioConfigurado));
+        })
+        .catch(() => {
+          setHasJumioConfig(false);
+        });
     }
   }, [isOpen, initialData, productos, catalogs, cliente]);
 
@@ -259,7 +271,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         if (result.creditoId) setCreditoGeneradoId(result.creditoId);
         if (result.jumio) setJumioData(result.jumio);
         setJumioStatus('PENDIENTE');
-        setCurrentStep(5); // Step 5: Validación Biométrica Jumio
+
+        // If Jumio is available and configured, use jumio; otherwise use manual upload
+        if (result.jumio?.webHref && hasJumioConfig !== false) {
+          setVerificationMode('jumio');
+        } else {
+          setVerificationMode('manual');
+        }
+
+        setCurrentStep(5); // Step 5: Validación de Identidad
       } else {
         setErrorMessage(result.error || 'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.');
       }
@@ -854,7 +874,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 5: VALIDACIÓN BIOMÉTRICA JUMIO Y ÉXITO ================= */}
+        {/* ================= STEP 5: VALIDACIÓN DE IDENTIDAD Y ÉXITO ================= */}
         {currentStep === 5 && (
           <div className="onboarding-step-body success-step animate-fadeIn">
             <div className="success-icon-animation">
@@ -862,12 +882,12 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
 
             <span className="step-kicker">
-              {jumioStatus === 'APROBADO' ? 'IDENTIDAD VALIDADA' : 'PASO FINAL: IDENTIDAD DIGITAL'}
+              {jumioStatus === 'APROBADO' ? 'IDENTIDAD VALIDADA' : 'PASO FINAL: VALIDACIÓN DE IDENTIDAD'}
             </span>
             <h2>
               {jumioStatus === 'APROBADO'
                 ? '¡Identidad Verificada con Éxito!'
-                : '¡Solicitud Radicada! Validación Biométrica'}
+                : '¡Solicitud Radicada! Validación de Identidad'}
             </h2>
             <p className="success-subtitle">
               Hemos registrado tu solicitud con el consecutivo oficial:
@@ -876,89 +896,160 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               {consecutivoGenerado}
             </div>
 
-            {/* Tarjeta de Verificación Biométrica Jumio */}
-            <div className="jumio-verification-card">
-              <div className="jumio-card-header">
-                <div className="jumio-brand-badge">
-                  <span className="jumio-shield-icon">🛡️</span>
-                  <div>
-                    <strong>Verificación de Identidad Oficial</strong>
-                    <small>Powered by Jumio Identity Cloud</small>
-                  </div>
-                </div>
-                <span className={`jumio-status-badge ${jumioStatus.toLowerCase()}`}>
-                  {jumioStatus === 'APROBADO' ? '✓ Biometría Aprobada' : '🟡 Validación Requerida'}
-                </span>
-              </div>
-
-              {jumioStatus !== 'APROBADO' ? (
-                <>
-                  <p className="jumio-desc">
-                    Para protegerte contra fraude y cumplir la normatividad financiera, Jumio validará tu cédula original y realizará una prueba de vida facial 1:1 en segundos.
-                  </p>
-
-                  <div className="jumio-instructions-grid">
-                    <div className="jumio-inst-item">
-                      <span className="j-step-num">1</span>
-                      <div>
-                        <strong>Cédula Original</strong>
-                        <small>Ten tu documento a la mano para capturar frente y reverso.</small>
-                      </div>
-                    </div>
-                    <div className="jumio-inst-item">
-                      <span className="j-step-num">2</span>
-                      <div>
-                        <strong>Cámara / QR Móvil</strong>
-                        <small>Usa tu cámara web o continúa escaneando un QR con tu celular.</small>
-                      </div>
-                    </div>
-                    <div className="jumio-inst-item">
-                      <span className="j-step-num">3</span>
-                      <div>
-                        <strong>Prueba de Vida</strong>
-                        <small>Selfie en vivo para verificar vivacidad y coincidencia facial.</small>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="jumio-actions-box">
-                    <a
-                      href={jumioData?.webHref || `http://localhost:5174/?jumio=mock&creditoId=${creditoGeneradoId || 1}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="portal-btn-primary glow-pulse jumio-launch-btn"
-                    >
-                      Iniciar Verificación Biométrica con Jumio ➔
-                    </a>
-
+            {jumioStatus !== 'APROBADO' ? (
+              <>
+                {/* Method selector tabs */}
+                <div className="verification-mode-tabs-container">
+                  <div className="verification-tabs-bar">
                     <button
                       type="button"
-                      className="btn-simulation-demo"
-                      disabled={simulatingJumio}
-                      onClick={handleSimularJumio}
-                      title="Simula la aprobación exitosa del webhook de Jumio para pruebas"
+                      className={`v-tab-btn ${verificationMode === 'manual' ? 'active' : ''}`}
+                      onClick={() => setVerificationMode('manual')}
                     >
-                      {simulatingJumio ? 'Validando con IA de Jumio...' : '⚡ Simular Aprobación Biométrica (Sandbox Demo)'}
+                      📁 Cargar Documento y Rostro
+                    </button>
+                    <button
+                      type="button"
+                      className={`v-tab-btn ${verificationMode === 'jumio' ? 'active' : ''}`}
+                      onClick={() => setVerificationMode('jumio')}
+                    >
+                      🛡️ Validación Jumio Cloud
                     </button>
                   </div>
-                </>
-              ) : (
+                </div>
+
+                {/* Option 1: Manual Document & Selfie Upload */}
+                {verificationMode === 'manual' && (
+                  <div className="manual-upload-wrapper animate-fadeIn">
+                    {!hasJumioConfig && (
+                      <div className="config-notice-banner">
+                        <span className="notice-icon">ℹ️</span>
+                        <div>
+                          <strong>Validación Directa por Documentos</strong>
+                          <p>Adjunta las fotografías de tu cédula y una selfie frontal para avanzar automáticamente a Estudio de Crédito.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <DocumentoRostroUploader
+                      creditoId={creditoGeneradoId || 1}
+                      token={token}
+                      showCancelButton={false}
+                      title="Carga de Cédula y Fotografía del Rostro"
+                      subtitle="Por favor sube fotos claras de tu documento y una selfie de tu rostro para validar tu identidad."
+                      onSuccess={() => {
+                        setJumioStatus('APROBADO');
+                        if (onCompletedBiometrics) onCompletedBiometrics();
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Option 2: Jumio Cloud Integration */}
+                {verificationMode === 'jumio' && (
+                  <div className="jumio-verification-card animate-fadeIn">
+                    <div className="jumio-card-header">
+                      <div className="jumio-brand-badge">
+                        <span className="jumio-shield-icon">🛡️</span>
+                        <div>
+                          <strong>Verificación Biométrica Jumio</strong>
+                          <small>Powered by Jumio Identity Cloud</small>
+                        </div>
+                      </div>
+                      <span className={`jumio-status-badge ${jumioStatus.toLowerCase()}`}>
+                        🟡 Validación Requerida
+                      </span>
+                    </div>
+
+                    {!hasJumioConfig && (
+                      <div className="onboarding-warning-box">
+                        <span>⚠️ Las credenciales de Jumio API aún no están configuradas en el servidor. Te recomendamos usar la opción <strong>Cargar Documento y Rostro</strong> arriba.</span>
+                      </div>
+                    )}
+
+                    <p className="jumio-desc">
+                      Jumio validará la autenticidad de tu cédula original y realizará una prueba de vida facial 1:1 en segundos.
+                    </p>
+
+                    <div className="jumio-instructions-grid">
+                      <div className="jumio-inst-item">
+                        <span className="j-step-num">1</span>
+                        <div>
+                          <strong>Cédula Original</strong>
+                          <small>Ten tu documento a la mano para capturar frente y reverso.</small>
+                        </div>
+                      </div>
+                      <div className="jumio-inst-item">
+                        <span className="j-step-num">2</span>
+                        <div>
+                          <strong>Cámara / Móvil</strong>
+                          <small>Usa tu cámara web o continúa escaneando un QR con tu celular.</small>
+                        </div>
+                      </div>
+                      <div className="jumio-inst-item">
+                        <span className="j-step-num">3</span>
+                        <div>
+                          <strong>Prueba de Vida</strong>
+                          <small>Selfie en vivo para verificar vivacidad y coincidencia facial.</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="jumio-actions-box">
+                      <a
+                        href={jumioData?.webHref || `http://localhost:5174/?jumio=mock&creditoId=${creditoGeneradoId || 1}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="portal-btn-primary glow-pulse jumio-launch-btn"
+                      >
+                        Iniciar Verificación con Jumio ➔
+                      </a>
+
+                      <button
+                        type="button"
+                        className="btn-simulation-demo"
+                        disabled={simulatingJumio}
+                        onClick={handleSimularJumio}
+                        title="Simula la aprobación exitosa del webhook de Jumio para pruebas"
+                      >
+                        {simulatingJumio ? 'Validando con IA de Jumio...' : '⚡ Simular Aprobación Biométrica (Sandbox Demo)'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Success View once Approved */
+              <div className="jumio-verification-card">
+                <div className="jumio-card-header">
+                  <div className="jumio-brand-badge">
+                    <span className="jumio-shield-icon">🛡️</span>
+                    <div>
+                      <strong>Identidad y Biometría Verificadas</strong>
+                      <small>Documentos y selfie aprobados</small>
+                    </div>
+                  </div>
+                  <span className="jumio-status-badge aprobado">
+                    ✓ Verificación Aprobada
+                  </span>
+                </div>
+
                 <div className="jumio-success-box">
                   <div className="j-success-row">
-                    <span>Resultado Biométrico:</span>
-                    <strong className="text-success">APROBADO (Coincidencia facial 98.7%)</strong>
+                    <span>Resultado Identidad:</span>
+                    <strong className="text-success">APROBADO (Documento y rostro validados)</strong>
                   </div>
                   <div className="j-success-row">
-                    <span>Prueba de Vida (Liveness):</span>
-                    <strong className="text-success">Válida (Anti-spoofing nivel 2)</strong>
+                    <span>Validación Facial:</span>
+                    <strong className="text-success">Válida (Coincidencia confirmada)</strong>
                   </div>
                   <div className="j-success-row">
                     <span>Estado del Crédito:</span>
                     <strong className="text-highlight-amount">AVANZADO A ESTUDIO Y APROBACIÓN</strong>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="success-footer-actions">
               <button
@@ -979,3 +1070,4 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     </div>
   );
 };
+

@@ -1150,5 +1150,25 @@ export const api = {
   obtenerEstadoVerificacionJumio: (token: string, creditoId: number) =>
     request<any>(`/api/v1/portal/jumio/estado/${creditoId}`, {}, token),
   simularCompletarJumio: (token: string, creditoId: number, decision: 'PASSED' | 'REJECTED' = 'PASSED') =>
-    request<any>('/api/v1/portal/jumio/simular-resultado', { method: 'POST', body: JSON.stringify({ creditoId, decision }) }, token)
+    request<any>('/api/v1/portal/jumio/simular-resultado', { method: 'POST', body: JSON.stringify({ creditoId, decision }) }, token),
+  obtenerConfigJumio: () =>
+    request<{ jumioConfigurado: boolean; datacenter: string; permiteCargaManual: boolean }>('/api/v1/portal/jumio/config'),
+  cargarDocumentosJumio: (
+    token: string,
+    body: {
+      creditoId: number;
+      documentoFrente: string;
+      documentoReverso?: string | null;
+      fotoRostro: string;
+      tipoDocumento?: string | null;
+      numeroDocumento?: string | null;
+      observaciones?: string | null;
+    }
+  ) =>
+    request<{ success: boolean; message: string; idVerificacion: number; creditoId: number; estado: string; decision: string }>(
+      '/api/v1/portal/jumio/cargar-documentos',
+      { method: 'POST', body: JSON.stringify(body) },
+      token
+    )
 };
+

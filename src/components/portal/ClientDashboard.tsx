@@ -53,19 +53,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   };
 
   // Pipeline stages calculation
-  const getStageIndex = (estado?: string) => {
+  const getStageIndex = (estado?: string, jumioEstado?: string) => {
     if (!estado) return 1;
     const est = estado.toUpperCase();
-    if (est.includes('RADICAD') || est.includes('PENDIENTE')) return 1;
-    if (est.includes('DOCUMENT') || est.includes('VALIDAC')) return 2;
-    if (est.includes('ESTUDIO') || est.includes('ANALIS')) return 3;
-    if (est.includes('APROBAD')) return 4;
-    if (est.includes('FIRMA') || est.includes('DOCUSIGN')) return 5;
     if (est.includes('DESEMBOLS')) return 6;
+    if (est.includes('FIRMA') || est.includes('DOCUSIGN')) return 5;
+    if (est.includes('APROBAD')) return 4;
+    if (est.includes('ESTUDIO') || est.includes('ANALIS') || jumioEstado === 'APROBADO') return 3;
+    if (est.includes('DOCUMENT') || est.includes('VALIDAC') || est.includes('JUMIO') || est.includes('BIOMETR')) return 2;
+    if (est.includes('RADICAD') || est.includes('SOLICITAD') || est.includes('PENDIENTE')) {
+      return jumioEstado === 'APROBADO' ? 3 : 2;
+    }
     return 2;
   };
 
-  const currentStageNum = getStageIndex(latestCredito?.estado);
+  const currentStageNum = getStageIndex(latestCredito?.estado, latestCredito?.jumioEstado);
 
   const pipelineStages = [
     { num: 1, name: 'Radicación', sub: 'Completada' },
@@ -205,7 +207,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             </span>
           </div>
  
-          {currentStageNum <= 2 && (
+          {currentStageNum <= 2 && latestCredito.jumioEstado !== 'APROBADO' && !latestCredito.estado.toUpperCase().includes('ESTUDIO') && (
             <div className="pipeline-jumio-banner">
               <div className="pj-content">
                 <span className="pj-badge">🛡️ Validación de Identidad Jumio Requerida</span>
@@ -217,7 +219,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                   className="portal-btn-primary"
                   onClick={async () => {
                     try {
-                      const res = await api.iniciarVerificacionJumio(token || '', latestCredito.id);
+                      const effectiveToken = token || localStorage.getItem('portal_client_token') || '';
+                      const res = await api.iniciarVerificacionJumio(effectiveToken, latestCredito.id);
                       if (res?.webHref) {
                         window.open(res.webHref, '_blank');
                       } else {
@@ -235,9 +238,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                   className="btn-simulation-demo-sm"
                   onClick={async () => {
                     try {
-                      await api.simularCompletarJumio(token || '', latestCredito.id, 'PASSED');
+                      const effectiveToken = token || localStorage.getItem('portal_client_token') || '';
+                      await api.simularCompletarJumio(effectiveToken, latestCredito.id, 'PASSED');
                       if (onRefreshSession) onRefreshSession();
-                    } catch {}
+                    } catch (err: any) {
+                      console.warn('Error al simular Jumio:', err);
+                    }
                   }}
                 >
                   ⚡ Simular Aprobación

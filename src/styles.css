@@ -5952,13 +5952,13 @@ th {
 /* 5. Applications & Credits Table */
 .dashboard-table-card,
 .portal-table-wrapper {
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--portal-card-bg, rgba(15, 23, 42, 0.75));
+  border: 1px solid var(--portal-card-border, rgba(255, 255, 255, 0.08));
   border-radius: 24px;
   padding: 28px 32px;
   backdrop-filter: blur(20px);
   margin-bottom: 40px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
 .table-card-header {
@@ -5975,12 +5975,12 @@ th {
   font-size: 1.25rem;
   font-weight: 800;
   margin: 0 0 4px;
-  color: #f8fafc;
+  color: var(--portal-text, #f8fafc);
 }
 
 .table-card-header p {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--portal-text-muted, #94a3b8);
   margin: 0;
 }
 
@@ -5989,7 +5989,7 @@ th {
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  color: var(--portal-text-muted, #94a3b8);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -6002,6 +6002,7 @@ th {
 .portal-data-table {
   width: 100%;
   border-collapse: collapse;
+  background: transparent !important;
 }
 
 .portal-data-table th {
@@ -6012,14 +6013,19 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #94a3b8;
+  background: transparent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .portal-data-table td {
   padding: 18px;
   font-size: 0.9rem;
-  color: #f8fafc;
+  color: var(--portal-text, #f8fafc);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.portal-data-table td strong {
+  color: var(--portal-text, #f8fafc);
 }
 
 .portal-data-table tr:hover td {
@@ -6030,6 +6036,104 @@ th {
   color: #38bdf8;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
+}
+
+/* Light Theme Overrides for Dashboard & Data Table */
+:root[data-theme='light'] .dashboard-table-card,
+:root[data-theme='light'] .portal-table-wrapper {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.09) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+:root[data-theme='light'] .table-card-header h3 {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .table-card-header p {
+  color: #64748b !important;
+}
+
+:root[data-theme='light'] .records-count-badge {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .portal-data-table {
+  background: #ffffff !important;
+}
+
+:root[data-theme='light'] .portal-data-table th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+:root[data-theme='light'] .portal-data-table td {
+  color: #0f172a !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+:root[data-theme='light'] .portal-data-table td strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .portal-data-table tr:hover td {
+  background: #f8fafc !important;
+}
+
+:root[data-theme='light'] .consecutivo-link {
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .dashboard-pipeline-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.09) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+:root[data-theme='light'] .pipeline-card-header h3 {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .pipeline-card-header p {
+  color: #64748b !important;
+}
+
+:root[data-theme='light'] .pipeline-card-header p strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .pipeline-jumio-banner {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(2, 132, 199, 0.1) 100%) !important;
+  border: 1px solid rgba(2, 132, 199, 0.25) !important;
+}
+
+:root[data-theme='light'] .pipeline-jumio-banner .pj-badge {
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .pipeline-jumio-banner p {
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .pipeline-stage-node .node-name {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .pipeline-stage-node .node-sub {
+  color: #64748b !important;
+}
+
+:root[data-theme='light'] .pipeline-stage-node.pending .node-marker {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border: 2px solid #cbd5e1 !important;
+}
+
+:root[data-theme='light'] .pipeline-stepper-row::before {
+  background: #e2e8f0 !important;
 }
 
 /* Status Badges */

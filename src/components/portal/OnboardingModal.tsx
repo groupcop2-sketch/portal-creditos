@@ -277,11 +277,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
     setSimulatingJumio(true);
     try {
-      await api.simularCompletarJumio(token || '', creditoGeneradoId, 'PASSED');
+      const effectiveToken = token || localStorage.getItem('portal_client_token') || '';
+      await api.simularCompletarJumio(effectiveToken, creditoGeneradoId, 'PASSED');
       setJumioStatus('APROBADO');
       if (onCompletedBiometrics) onCompletedBiometrics();
-    } catch (err) {
+    } catch (err: any) {
+      console.warn('Error en simularCompletarJumio:', err);
       setJumioStatus('APROBADO');
+      if (onCompletedBiometrics) onCompletedBiometrics();
     } finally {
       setSimulatingJumio(false);
     }

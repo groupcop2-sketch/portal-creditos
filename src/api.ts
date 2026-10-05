@@ -897,6 +897,7 @@ export type PortalCreditosResponse = {
     plazo: number;
     cuota: number | null;
     estado: string;
+    jumioEstado?: string;
     fecha: string;
   }>;
 };

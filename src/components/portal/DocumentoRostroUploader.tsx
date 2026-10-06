@@ -83,6 +83,19 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [s3BucketArn, setS3BucketArn] = useState('arn:aws:s3:::s3-demo-financiera-009040764532-us-east-2-an');
+
+  React.useEffect(() => {
+    api.obtenerConfigJumio(creditoId)
+      .then((cfg) => {
+        if (cfg?.s3Arn) {
+          setS3BucketArn(cfg.s3Arn);
+        } else if (cfg?.s3Bucket) {
+          setS3BucketArn(`arn:aws:s3:::${cfg.s3Bucket}`);
+        }
+      })
+      .catch(() => {});
+  }, [creditoId]);
 
   const inputFrenteRef = useRef<HTMLInputElement>(null);
   const inputReversoRef = useRef<HTMLInputElement>(null);
@@ -148,7 +161,7 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
 
       const res = await api.cargarDocumentosJumio(effectiveToken, payload);
 
-      setSuccessMessage('¡Documentos y fotografía recibidos correctamente! Tu crédito ha avanzado a Estudio.');
+      setSuccessMessage('¡Documentos y fotografía subidos exitosamente a AWS S3! Tu crédito ha avanzado a Estudio.');
       setTimeout(() => {
         onSuccess(res);
       }, 1200);
@@ -168,6 +181,10 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
         <div>
           <h3 className="doc-uploader-title">{title}</h3>
           <p className="doc-uploader-subtitle">{subtitle}</p>
+          <div className="s3-target-badge" style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#38bdf8', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '3px 10px', borderRadius: '20px' }}>
+            <span>☁️ Bucket S3:</span>
+            <code style={{ fontSize: '0.75rem', color: '#e0f2fe' }}>{s3BucketArn}</code>
+          </div>
         </div>
       </div>
 
@@ -343,7 +360,7 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
             className="portal-btn-primary glow-pulse"
             disabled={!isFormValid || submitting}
           >
-            {submitting ? 'Subiendo y validando...' : 'Guardar y Validar Documentos ➔'}
+            {submitting ? 'Subiendo imágenes a AWS S3...' : 'Guardar y Subir a AWS S3 ➔'}
           </button>
         </div>
       </form>

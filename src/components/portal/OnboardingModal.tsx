@@ -923,10 +923,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div className="manual-upload-wrapper animate-fadeIn">
                     {!hasJumioConfig && (
                       <div className="config-notice-banner">
-                        <span className="notice-icon">ℹ️</span>
+                        <span className="notice-icon">☁️</span>
                         <div>
-                          <strong>Validación Directa por Documentos</strong>
-                          <p>Adjunta las fotografías de tu cédula y una selfie frontal para avanzar automáticamente a Estudio de Crédito.</p>
+                          <strong>Validación Directa por Documentos (AWS S3)</strong>
+                          <p>Adjunta las fotografías de tu cédula y una selfie frontal. Las imágenes se respaldarán de forma segura en el bucket Amazon S3 para avanzar a Estudio de Crédito.</p>
                         </div>
                       </div>
                     )}

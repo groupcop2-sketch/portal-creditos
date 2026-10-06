@@ -1152,7 +1152,16 @@ export const api = {
   simularCompletarJumio: (token: string, creditoId: number, decision: 'PASSED' | 'REJECTED' = 'PASSED') =>
     request<any>('/api/v1/portal/jumio/simular-resultado', { method: 'POST', body: JSON.stringify({ creditoId, decision }) }, token),
   obtenerConfigJumio: (creditoId?: number) =>
-    request<{ jumioConfigurado: boolean; datacenter: string; permiteCargaManual: boolean; idFinanciera?: number; nombreFinanciera?: string }>(
+    request<{
+      jumioConfigurado: boolean;
+      datacenter: string;
+      permiteCargaManual: boolean;
+      s3Bucket?: string;
+      s3Region?: string;
+      s3Arn?: string;
+      idFinanciera?: number;
+      nombreFinanciera?: string;
+    }>(
       `/api/v1/portal/jumio/config${creditoId ? `?creditoId=${creditoId}` : ''}`
     ),
   cargarDocumentosJumio: (
@@ -1167,7 +1176,24 @@ export const api = {
       observaciones?: string | null;
     }
   ) =>
-    request<{ success: boolean; message: string; idVerificacion: number; creditoId: number; estado: string; decision: string }>(
+    request<{
+      success: boolean;
+      message: string;
+      idVerificacion: number;
+      creditoId: number;
+      estado: string;
+      decision: string;
+      s3?: {
+        bucket: string;
+        arn: string;
+        region: string;
+        archivos: {
+          frente: string;
+          reverso: string | null;
+          rostro: string;
+        };
+      };
+    }>(
       '/api/v1/portal/jumio/cargar-documentos',
       { method: 'POST', body: JSON.stringify(body) },
       token

@@ -803,6 +803,8 @@ export type SimulacionCredito = {
     plazo: number;
     tasaMensual: number;
     cuotaEstimada: number;
+    cuotaBase: number;
+    cargosPorCuota: number;
     totalIntereses: number;
     totalPagar: number;
   };
@@ -817,6 +819,7 @@ export type SimulacionCredito = {
     aplicaIva: boolean;
     obligatorio: boolean;
     prioridad: number;
+    sumaALaCuota: boolean;
     sumaAlCredito: boolean;
     esDescuento: boolean;
   }>;
@@ -827,6 +830,7 @@ export type SimulacionCredito = {
     interes: number;
     cuota: number;
     saldoFinal: number;
+    cargos: number;
   }>;
 };
 
@@ -1143,6 +1147,7 @@ export const api = {
     request<PortalCliente>('/api/v1/portal/perfil-laboral', { method: 'PUT', body: JSON.stringify(body) }, token),
   listPortalProductos: (token: string) => request<PortalProductoCredito[]>('/api/v1/portal/productos', {}, token),
   listPortalCreditos: (token: string) => request<PortalCreditosResponse>('/api/v1/portal/creditos', {}, token),
+  simularProductoPublico: (body: { idProductoCredito: number; montoSolicitado: number; plazo: number }) => request<SimulacionCredito>('/api/v1/portal/simulacion', { method: 'POST', body: JSON.stringify(body) }),
   simularPortalCredito: (token: string, body: unknown) => request<SimulacionCredito>('/api/v1/portal/simular', { method: 'POST', body: JSON.stringify(body) }, token),
   crearSolicitudPortal: (token: string, body: unknown) => request<CreditoRow & { jumio?: any }>('/api/v1/portal/solicitudes', { method: 'POST', body: JSON.stringify(body) }, token),
   iniciarVerificacionJumio: (token: string, creditoId: number) =>

@@ -1,3 +1,4 @@
+import { useProductSimulation } from './useProductSimulation';
 import React, { useState, useEffect } from 'react';
 import {
   api,
@@ -147,21 +148,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   }, [isOpen, initialData, productos, catalogs, cliente]);
 
-  if (!isOpen) return null;
-
-  // Real-time calculation
-  const tasaMensual = 0.0145;
-  const tasaFianza = 0.002;
-  const cuotaEstimada = Math.round(
-    (monto * (tasaMensual * Math.pow(1 + tasaMensual, plazo))) /
-      (Math.pow(1 + tasaMensual, plazo) - 1) +
-      monto * tasaFianza
-  );
-
   const selectedProd = productos.find((p) => String(p.id) === idProductoCredito) || productos[0];
+  const { simulation, error: simulationError, loading: simulationLoading } = useProductSimulation(selectedProd?.id, monto, plazo, isOpen);
+  const cuotaEstimada = simulation?.resumen.cuotaEstimada;
+  if (!isOpen) return null;
 
   // Step Validation & Navigation
   const handleNextFromStep1 = () => {
+    if (!simulation) { setErrorMessage(simulationError || 'Espera a que termine la simulación.'); return; }
     if (!idProductoCredito) {
       setErrorMessage('Por favor selecciona una línea de crédito.');
       return;
@@ -224,6 +218,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   const handleSubmitApplication = async () => {
+    if (!simulation) { setErrorMessage(simulationError || 'Espera a que termine la simulación.'); return; }
     if (!aceptaTerminos || !aceptaHabeasData) {
       setErrorMessage('Debes aceptar los términos y condiciones y el tratamiento de datos personales para continuar.');
       return;
@@ -366,6 +361,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <div className="step-heading">
               <span className="step-kicker">PASO 1 DE 4</span>
               <h2>Personaliza las condiciones de tu crédito</h2>
+              {simulationError && <p role="alert">{simulationError}</p>}
+              {simulation && <p>Capital real financiado: <strong>{formatMoney(simulation.resumen.valorCredito)}</strong> | Cargos financiados: {formatMoney(simulation.resumen.cargosFinanciados)}</p>}
               <p>Elige el producto, monto y plazo para ajustar la cuota que mejor se adapte a tu nómina.</p>
             </div>
 
@@ -436,7 +433,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               <div className="onboarding-fee-card">
                 <div className="fee-col">
                   <span>Cuota mensual estimada:</span>
-                  <strong>{formatMoney(cuotaEstimada)}</strong>
+                  <strong>{simulation ? formatMoney(cuotaEstimada) : simulationLoading ? 'Calculando...' : '-'}</strong>
                 </div>
                 <div className="fee-col right">
                   <span>Tasa fija mensual:</span>
@@ -788,11 +785,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
                 <div className="summary-header-rate">
                   <span>Tasa fija</span>
-                  <strong>1.45% M.V.</strong>
+                  <strong>{simulation ? simulation.resumen.tasaMensual.toLocaleString('es-CO') + '% M.V.' : '-'}</strong>
                 </div>
               </div>
 
               <div className="summary-details-grid">
+                <div className="summary-item"><span className="s-label">Capital real financiado:</span><strong className="s-value">{simulation ? formatMoney(simulation.resumen.valorCredito) : '-'}</strong></div>
+                <div className="summary-item"><span className="s-label">Cargos financiados:</span><strong className="s-value">{simulation ? formatMoney(simulation.resumen.cargosFinanciados) : '-'}</strong></div>
+                <div className="summary-item"><span className="s-label">Desembolso neto:</span><strong className="s-value">{simulation ? formatMoney(simulation.resumen.valorDesembolso) : '-'}</strong></div>
                 <div className="summary-item">
                   <span className="s-label">Monto Solicitado:</span>
                   <strong className="s-value text-accent">{formatMoney(monto)}</strong>
@@ -803,7 +803,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
                 <div className="summary-item">
                   <span className="s-label">Cuota Mensual Estimada:</span>
-                  <strong className="s-value text-success">{formatMoney(cuotaEstimada)}</strong>
+                  <strong className="s-value text-success">{simulation ? formatMoney(cuotaEstimada) : '-'}</strong>
                 </div>
                 <div className="summary-item">
                   <span className="s-label">Empresa Pagadora:</span>

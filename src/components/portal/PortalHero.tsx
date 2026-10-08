@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useProductSimulation } from './useProductSimulation';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { PortalProductoCredito } from '../../api';
 
 interface PortalHeroProps {
@@ -36,21 +37,12 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
   const minPlazo = activeProduct?.plazoMinimo || 6;
   const maxPlazo = activeProduct?.plazoMaximo || 60;
 
-  // Monthly rate (typical 1.45% M.V. or from product)
-  const tasaMensual = 0.0145; // 1.45% mensual
-  const tasaFianza = 0.002;  // 0.2% fianza/seguro mensual
-
-  // Financial amortization formula
-  const cuotaCalculada = useMemo(() => {
-    const P = monto;
-    const r = tasaMensual;
-    const n = plazo;
-    if (n <= 0 || P <= 0) return 0;
-    // Standard loan annuity formula: P * [ r(1+r)^n ] / [ (1+r)^n - 1 ]
-    const cuotaBase = (P * (r * Math.pow(1 + r, n))) / (Math.pow(1 + r, n) - 1);
-    const seguroCuota = P * tasaFianza;
-    return Math.round(cuotaBase + seguroCuota);
-  }, [monto, plazo]);
+  useEffect(() => {
+    setMonto(value => Math.min(maxMonto, Math.max(minMonto, value)));
+    setPlazo(value => Math.min(maxPlazo, Math.max(minPlazo, value)));
+  }, [minMonto, maxMonto, minPlazo, maxPlazo]);
+  const { simulation, error: simulationError, loading: simulationLoading } = useProductSimulation(activeProduct?.id, monto, plazo);
+  const cuotaCalculada = simulation?.resumen.cuotaEstimada;
 
   const quickAmounts = [2000000, 5000000, 10000000, 20000000, 35000000, 50000000];
   const quickMonths = [12, 24, 36, 48, 60];
@@ -137,7 +129,7 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
               </div>
               <div className="simulator-badge-tasa">
                 <span>Tasa fija</span>
-                <strong>1.45% M.V.</strong>
+                <strong>{simulation ? simulation.resumen.tasaMensual.toLocaleString('es-CO') + '% M.V.' : '-'}</strong>
               </div>
             </div>
 
@@ -146,7 +138,7 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
               <div className="simulator-field-group">
                 <label className="simulator-label">Línea de crédito:</label>
                 <div className="product-pills-row">
-                  {productos.slice(0, 3).map((prod) => (
+                  {productos.map((prod) => (
                     <button
                       key={prod.id}
                       type="button"
@@ -217,7 +209,7 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
                 className="simulator-slider"
                 min={minPlazo}
                 max={maxPlazo}
-                step={6}
+                step={1}
                 value={plazo}
                 onChange={(e) => setPlazo(Number(e.target.value))}
               />
@@ -248,8 +240,8 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
             <div className="simulator-result-box">
               <div className="result-main-col">
                 <span className="result-kicker">Tu cuota mensual aproximada:</span>
-                <strong className="result-monthly-fee">{formatMoney(cuotaCalculada)}</strong>
-                <small className="result-note">Incluye capital, intereses y seguro</small>
+                <strong className="result-monthly-fee">{simulationLoading ? 'Calculando...' : simulation ? formatMoney(cuotaCalculada) : '-'}</strong>
+                <small className="result-note">Incluye capital, interés corriente y cargos configurados</small>
               </div>
 
               <div className="result-stats-col">
@@ -263,15 +255,24 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
                 </div>
                 <div className="result-stat-item">
                   <span>Desembolso neto:</span>
-                  <strong className="text-success">{formatMoney(monto)}</strong>
+                  <strong className="text-success">{simulation ? formatMoney(simulation.resumen.valorDesembolso) : '-'}</strong>
                 </div>
               </div>
             </div>
 
+            {simulationError && <p role="alert">{simulationError}</p>}
+            {simulation && <div className="result-stats-col">
+              <div className="result-stat-item"><span>Cargos financiados:</span><strong>{formatMoney(simulation.resumen.cargosFinanciados)}</strong></div>
+              <div className="result-stat-item"><span>Capital real del crédito:</span><strong>{formatMoney(simulation.resumen.valorCredito)}</strong></div>
+              {simulation.atributos.filter(a => a.sumaAlCredito || a.sumaALaCuota).map(a => <div className="result-stat-item" key={a.id}>
+                <span>{a.nombre}{a.sumaALaCuota ? ' (por cuota)' : ''}{a.aplicaIva ? ' (IVA incluido)' : ''}:</span><strong>{formatMoney(a.valorCalculado)}</strong>
+              </div>)}
+            </div>}
             {/* CTA Button */}
             <button
               type="button"
               className="simulator-cta-btn"
+              disabled={!simulation || simulationLoading}
               onClick={handleApply}
             >
               <span>Solicitar mi Crédito Ahora</span>

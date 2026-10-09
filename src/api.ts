@@ -1150,6 +1150,13 @@ export const api = {
   simularProductoPublico: (body: { idProductoCredito: number; montoSolicitado: number; plazo: number }) => request<SimulacionCredito>('/api/v1/portal/simulacion', { method: 'POST', body: JSON.stringify(body) }),
   simularPortalCredito: (token: string, body: unknown) => request<SimulacionCredito>('/api/v1/portal/simular', { method: 'POST', body: JSON.stringify(body) }, token),
   crearSolicitudPortal: (token: string, body: unknown) => request<CreditoRow & { jumio?: any }>('/api/v1/portal/solicitudes', { method: 'POST', body: JSON.stringify(body) }, token),
+  iniciarVerificacionDidit: (token: string, creditoId: number, callbackUrl?: string) =>
+    request<{ url: string; session_id: string }>('/api/v1/portal/didit/session', {
+      method: 'POST',
+      body: JSON.stringify({ creditoId, callbackUrl })
+    }, token),
+  obtenerEstadoDidit: (token: string, creditoId: number) =>
+    request<{ configurado: boolean; verificacion: any }>(`/api/v1/portal/didit/estado/${creditoId}`, {}, token),
   iniciarVerificacionJumio: (token: string, creditoId: number) =>
     request<any>('/api/v1/portal/jumio/iniciar', { method: 'POST', body: JSON.stringify({ creditoId }) }, token),
   obtenerEstadoVerificacionJumio: (token: string, creditoId: number) =>

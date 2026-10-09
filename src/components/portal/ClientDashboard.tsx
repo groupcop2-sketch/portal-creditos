@@ -7,6 +7,7 @@ import {
   type PortalProductoCredito
 } from '../../api';
 import { DocumentoRostroUploader } from './DocumentoRostroUploader';
+import { DiditVerifyButton } from './DiditVerifyButton';
 
 interface ClientDashboardProps {
   cliente: PortalCliente;
@@ -223,6 +224,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                 <p>Tu crédito requiere validación de cédula y fotografía del rostro para avanzar al estudio de crédito.</p>
               </div>
               <div className="pj-actions">
+                <DiditVerifyButton
+                  creditoId={latestCredito.id}
+                  token={token}
+                  onSuccess={() => {
+                    if (onRefreshSession) onRefreshSession();
+                  }}
+                />
                 <button
                   type="button"
                   className="portal-btn-primary glow-pulse"

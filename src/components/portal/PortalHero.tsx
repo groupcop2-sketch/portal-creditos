@@ -1,6 +1,20 @@
 import { useProductSimulation } from './useProductSimulation';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { PortalProductoCredito } from '../../api';
+
+const getProductIcon = (name: string = '') => {
+  const n = name.toLowerCase();
+  if (n.includes('compra') || n.includes('cartera')) return '🔄';
+  if (n.includes('educat') || n.includes('estudio') || n.includes('univers')) return '🎓';
+  if (n.includes('salud') || n.includes('medic') || n.includes('cirug')) return '🩺';
+  if (n.includes('vehic') || n.includes('moto') || n.includes('carro') || n.includes('auto')) return '🚗';
+  if (n.includes('vivien') || n.includes('hogar') || n.includes('remodel')) return '🏠';
+  if (n.includes('anticip') || n.includes('avance')) return '⚡';
+  if (n.includes('pension')) return '👴';
+  if (n.includes('libre') || n.includes('invers')) return '💳';
+  if (n.includes('comerc') || n.includes('negocio') || n.includes('micro')) return '💼';
+  return '💰';
+};
 
 interface PortalHeroProps {
   productos: PortalProductoCredito[];
@@ -22,6 +36,9 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [monto, setMonto] = useState<number>(10000000);
   const [plazo, setPlazo] = useState<number>(24);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const chipsTrackRef = useRef<HTMLDivElement>(null);
 
   // Active product
   const activeProduct = useMemo(() => {
@@ -41,6 +58,41 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
     setMonto(value => Math.min(maxMonto, Math.max(minMonto, value)));
     setPlazo(value => Math.min(maxPlazo, Math.max(minPlazo, value)));
   }, [minMonto, maxMonto, minPlazo, maxPlazo]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const handleSelectProduct = (prod: PortalProductoCredito) => {
+    setSelectedProductId(prod.id);
+    const pMinMonto = prod.montoMinimo || 1000000;
+    const pMaxMonto = prod.montoMaximo || 50000000;
+    const pMinPlazo = prod.plazoMinimo || 6;
+    const pMaxPlazo = prod.plazoMaximo || 60;
+    if (monto < pMinMonto) setMonto(pMinMonto);
+    if (monto > pMaxMonto) setMonto(pMaxMonto);
+    if (plazo < pMinPlazo) setPlazo(pMinPlazo);
+    if (plazo > pMaxPlazo) setPlazo(pMaxPlazo);
+    setIsDropdownOpen(false);
+  };
+
+  const scrollChips = (dir: 'left' | 'right') => {
+    if (chipsTrackRef.current) {
+      const amount = dir === 'left' ? -220 : 220;
+      chipsTrackRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
   const { simulation, error: simulationError, loading: simulationLoading } = useProductSimulation(activeProduct?.id, monto, plazo);
   const cuotaCalculada = simulation?.resumen.cuotaEstimada;
 
@@ -135,23 +187,156 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
 
             {/* Product Selector */}
             {productos.length > 1 && (
-              <div className="simulator-field-group">
-                <label className="simulator-label">Línea de crédito:</label>
-                <div className="product-pills-row">
-                  {productos.map((prod) => (
-                    <button
-                      key={prod.id}
-                      type="button"
-                      className={`product-pill-btn ${(activeProduct?.id === prod.id) ? 'active' : ''}`}
-                      onClick={() => {
-                        setSelectedProductId(prod.id);
-                        if (monto < (prod.montoMinimo || 1000000)) setMonto(prod.montoMinimo || 1000000);
-                        if (monto > (prod.montoMaximo || 50000000)) setMonto(prod.montoMaximo || 50000000);
-                      }}
-                    >
-                      {prod.nombre}
-                    </button>
-                  ))}
+              <div className="simulator-field-group product-selector-group">
+                <div className="simulator-label-row">
+                  <label className="simulator-label">Línea de crédito:</label>
+                  <span className="product-count-tag">{productos.length} opciones disponibles</span>
+                </div>
+
+                {/* Active Product Card with Dropdown Trigger */}
+                <div className="product-dropdown-container" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    className={`product-active-card-trigger ${isDropdownOpen ? 'open' : ''}`}
+                    onClick={() => setIsDropdownOpen((prev) => !prev)}
+                    aria-expanded={isDropdownOpen}
+                  >
+                    <div className="pac-left">
+                      <div className="pac-icon-box">
+                        {getProductIcon(activeProduct?.nombre)}
+                      </div>
+                      <div className="pac-info">
+                        <div className="pac-title-row">
+                          <strong className="pac-title">{activeProduct?.nombre || 'Selecciona una línea'}</strong>
+                          {activeProduct?.tipoCredito && (
+                            <span className="pac-type-pill">
+                              {activeProduct.tipoCredito.replaceAll('_', ' ')}
+                            </span>
+                          )}
+                        </div>
+                        <span className="pac-meta">
+                          Hasta {formatMoney(activeProduct?.montoMaximo)} · Hasta {activeProduct?.plazoMaximo} meses
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pac-right">
+                      <span className="pac-change-text">{isDropdownOpen ? 'Cerrar' : 'Cambiar'}</span>
+                      <svg
+                        className={`pac-chevron ${isDropdownOpen ? 'rotate' : ''}`}
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu Modal */}
+                  {isDropdownOpen && (
+                    <div className="product-dropdown-menu">
+                      <div className="pdm-header">
+                        <div>
+                          <strong className="pdm-header-title">Elige tu Línea de Crédito</strong>
+                          <span className="pdm-header-sub">Tasas y condiciones adaptadas a tu perfil</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="pdm-close-btn"
+                          onClick={() => setIsDropdownOpen(false)}
+                          aria-label="Cerrar"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="pdm-list">
+                        {productos.map((prod) => {
+                          const isSelected = activeProduct?.id === prod.id;
+                          return (
+                            <button
+                              key={prod.id}
+                              type="button"
+                              className={`pdm-item ${isSelected ? 'selected' : ''}`}
+                              onClick={() => handleSelectProduct(prod)}
+                            >
+                              <div className="pdm-item-icon">
+                                {getProductIcon(prod.nombre)}
+                              </div>
+                              <div className="pdm-item-body">
+                                <div className="pdm-item-headline">
+                                  <span className="pdm-item-name">{prod.nombre}</span>
+                                  {prod.tipoCredito && (
+                                    <span className="pdm-item-tag">
+                                      {prod.tipoCredito.replaceAll('_', ' ')}
+                                    </span>
+                                  )}
+                                </div>
+                                {prod.descripcion && (
+                                  <p className="pdm-item-desc">{prod.descripcion}</p>
+                                )}
+                                <div className="pdm-item-specs">
+                                  <span>Monto: <strong>{formatMoney(prod.montoMinimo)} - {formatMoney(prod.montoMaximo)}</strong></span>
+                                  <span className="pdm-dot">•</span>
+                                  <span>Plazo: <strong>{prod.plazoMinimo} - {prod.plazoMaximo} meses</strong></span>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <div className="pdm-check-mark">
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick-Scroll Horizontal Chips (Full names, never truncated!) */}
+                <div className="product-quick-chips-wrapper">
+                  <button
+                    type="button"
+                    className="chips-nav-btn left"
+                    onClick={() => scrollChips('left')}
+                    aria-label="Anterior"
+                  >
+                    ‹
+                  </button>
+
+                  <div className="product-quick-chips-track" ref={chipsTrackRef}>
+                    {productos.map((prod) => {
+                      const isSelected = activeProduct?.id === prod.id;
+                      return (
+                        <button
+                          key={prod.id}
+                          type="button"
+                          className={`product-quick-chip ${isSelected ? 'active' : ''}`}
+                          onClick={() => handleSelectProduct(prod)}
+                        >
+                          <span className="pqc-icon">{getProductIcon(prod.nombre)}</span>
+                          <span className="pqc-text">{prod.nombre}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="chips-nav-btn right"
+                    onClick={() => scrollChips('right')}
+                    aria-label="Siguiente"
+                  >
+                    ›
+                  </button>
                 </div>
               </div>
             )}

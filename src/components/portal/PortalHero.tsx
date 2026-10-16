@@ -38,7 +38,6 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
   const [plazo, setPlazo] = useState<number>(24);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const chipsTrackRef = useRef<HTMLDivElement>(null);
 
   // Active product
   const activeProduct = useMemo(() => {
@@ -87,12 +86,6 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
     setIsDropdownOpen(false);
   };
 
-  const scrollChips = (dir: 'left' | 'right') => {
-    if (chipsTrackRef.current) {
-      const amount = dir === 'left' ? -220 : 220;
-      chipsTrackRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-    }
-  };
   const { simulation, error: simulationError, loading: simulationLoading } = useProductSimulation(activeProduct?.id, monto, plazo);
   const cuotaCalculada = simulation?.resumen.cuotaEstimada;
 
@@ -219,22 +212,23 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
                         </span>
                       </div>
                     </div>
-                    <div className="pac-right">
+                    <span className={`pac-change-btn ${isDropdownOpen ? 'open' : ''}`}>
                       <span className="pac-change-text">{isDropdownOpen ? 'Cerrar' : 'Cambiar'}</span>
                       <svg
                         className={`pac-chevron ${isDropdownOpen ? 'rotate' : ''}`}
-                        width="18"
-                        height="18"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        aria-hidden="true"
                       >
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
-                    </div>
+                    </span>
                   </button>
 
                   {/* Dropdown Menu Modal */}
@@ -258,6 +252,9 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
                       <div className="pdm-list">
                         {productos.map((prod) => {
                           const isSelected = activeProduct?.id === prod.id;
+                          const tipoLabel = prod.tipoCredito
+                            ? prod.tipoCredito.replaceAll('_', ' ')
+                            : 'Crédito';
                           return (
                             <button
                               key={prod.id}
@@ -265,78 +262,45 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
                               className={`pdm-item ${isSelected ? 'selected' : ''}`}
                               onClick={() => handleSelectProduct(prod)}
                             >
-                              <div className="pdm-item-icon">
+                              <div className="pdm-item-icon" aria-hidden="true">
                                 {getProductIcon(prod.nombre)}
                               </div>
                               <div className="pdm-item-body">
                                 <div className="pdm-item-headline">
-                                  <span className="pdm-item-name">{prod.nombre}</span>
-                                  {prod.tipoCredito && (
-                                    <span className="pdm-item-tag">
-                                      {prod.tipoCredito.replaceAll('_', ' ')}
-                                    </span>
-                                  )}
+                                  <span className="pdm-item-name" title={prod.nombre}>
+                                    {prod.nombre}
+                                  </span>
+                                  <span className="pdm-item-tag">{tipoLabel}</span>
                                 </div>
-                                {prod.descripcion && (
-                                  <p className="pdm-item-desc">{prod.descripcion}</p>
-                                )}
+                                <p className="pdm-item-desc" title={prod.descripcion || undefined}>
+                                  {prod.descripcion?.trim() || 'Línea de crédito disponible'}
+                                </p>
                                 <div className="pdm-item-specs">
-                                  <span>Monto: <strong>{formatMoney(prod.montoMinimo)} - {formatMoney(prod.montoMaximo)}</strong></span>
-                                  <span className="pdm-dot">•</span>
-                                  <span>Plazo: <strong>{prod.plazoMinimo} - {prod.plazoMaximo} meses</strong></span>
+                                  <div className="pdm-spec">
+                                    <span className="pdm-spec-label">Monto</span>
+                                    <strong className="pdm-spec-value">
+                                      {formatMoney(prod.montoMinimo)} – {formatMoney(prod.montoMaximo)}
+                                    </strong>
+                                  </div>
+                                  <div className="pdm-spec">
+                                    <span className="pdm-spec-label">Plazo</span>
+                                    <strong className="pdm-spec-value">
+                                      {prod.plazoMinimo} – {prod.plazoMaximo} meses
+                                    </strong>
+                                  </div>
                                 </div>
                               </div>
-                              {isSelected && (
-                                <div className="pdm-check-mark">
-                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                </div>
-                              )}
+                              <div className={`pdm-check-mark ${isSelected ? 'visible' : ''}`} aria-hidden={!isSelected}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </div>
                             </button>
                           );
                         })}
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* Quick-Scroll Horizontal Chips (Full names, never truncated!) */}
-                <div className="product-quick-chips-wrapper">
-                  <button
-                    type="button"
-                    className="chips-nav-btn left"
-                    onClick={() => scrollChips('left')}
-                    aria-label="Anterior"
-                  >
-                    ‹
-                  </button>
-
-                  <div className="product-quick-chips-track" ref={chipsTrackRef}>
-                    {productos.map((prod) => {
-                      const isSelected = activeProduct?.id === prod.id;
-                      return (
-                        <button
-                          key={prod.id}
-                          type="button"
-                          className={`product-quick-chip ${isSelected ? 'active' : ''}`}
-                          onClick={() => handleSelectProduct(prod)}
-                        >
-                          <span className="pqc-icon">{getProductIcon(prod.nombre)}</span>
-                          <span className="pqc-text">{prod.nombre}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="chips-nav-btn right"
-                    onClick={() => scrollChips('right')}
-                    aria-label="Siguiente"
-                  >
-                    ›
-                  </button>
                 </div>
               </div>
             )}

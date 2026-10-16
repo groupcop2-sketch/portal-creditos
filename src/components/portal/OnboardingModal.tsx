@@ -96,6 +96,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   // Confirmations
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaHabeasData, setAceptaHabeasData] = useState(false);
+  const [showAmortization, setShowAmortization] = useState(false);
 
   // Sync initial data when modal opens
   useEffect(() => {
@@ -136,6 +137,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         setIsCustomCargo(false);
       }
       setErrorMessage('');
+      setShowAmortization(false);
       setConsecutivoGenerado('');
 
       api.obtenerConfigJumio()
@@ -151,6 +153,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const selectedProd = productos.find((p) => String(p.id) === idProductoCredito) || productos[0];
   const { simulation, error: simulationError, loading: simulationLoading } = useProductSimulation(selectedProd?.id, monto, plazo, isOpen);
   const cuotaEstimada = simulation?.resumen.cuotaEstimada;
+  const planAmortizacion = simulation?.plan ?? [];
+  const tasaMensual = simulation?.resumen.tasaMensual;
   if (!isOpen) return null;
 
   // Step Validation & Navigation
@@ -437,8 +441,87 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
                 <div className="fee-col right">
                   <span>Tasa fija mensual:</span>
-                  <strong className="text-success">1.45% M.V.</strong>
+                  <strong className="text-success">
+                    {typeof tasaMensual === 'number'
+                      ? `${tasaMensual.toLocaleString('es-CO', { maximumFractionDigits: 3 })}% M.V.`
+                      : '-'}
+                  </strong>
                 </div>
+              </div>
+
+              {/* Tabla de amortización — debajo del resumen de cuota */}
+              <div className="onboarding-amortization-panel">
+                <button
+                  type="button"
+                  className={`onboarding-amortization-toggle ${showAmortization ? 'open' : ''}`}
+                  onClick={() => setShowAmortization((prev) => !prev)}
+                  disabled={!simulation || planAmortizacion.length === 0}
+                  aria-expanded={showAmortization}
+                >
+                  <span className="oam-toggle-left">
+                    <span className="oam-toggle-icon" aria-hidden="true">📋</span>
+                    <span>
+                      <strong>Tabla de amortización</strong>
+                      <small>
+                        {simulation
+                          ? `${planAmortizacion.length} cuotas · Total a pagar ${formatMoney(simulation.resumen.totalPagar)}`
+                          : simulationLoading
+                            ? 'Calculando plan de pagos...'
+                            : 'Ajusta monto y plazo para ver el plan'}
+                      </small>
+                    </span>
+                  </span>
+                  <span className="oam-toggle-chevron" aria-hidden="true">{showAmortization ? '▲' : '▼'}</span>
+                </button>
+
+                {showAmortization && simulation && planAmortizacion.length > 0 && (
+                  <div className="onboarding-amortization-body">
+                    <div className="oam-summary-row">
+                      <div className="oam-summary-chip">
+                        <span>Intereses totales</span>
+                        <strong>{formatMoney(simulation.resumen.totalIntereses)}</strong>
+                      </div>
+                      <div className="oam-summary-chip">
+                        <span>Capital financiado</span>
+                        <strong>{formatMoney(simulation.resumen.valorCredito)}</strong>
+                      </div>
+                      <div className="oam-summary-chip">
+                        <span>Total a pagar</span>
+                        <strong>{formatMoney(simulation.resumen.totalPagar)}</strong>
+                      </div>
+                    </div>
+
+                    <div className="onboarding-amortization-table-wrap">
+                      <table className="onboarding-amortization-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Saldo inicial</th>
+                            <th>Capital</th>
+                            <th>Interés</th>
+                            <th>Cuota</th>
+                            <th>Saldo final</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {planAmortizacion.map((row) => (
+                            <tr key={row.numero}>
+                              <td>{row.numero}</td>
+                              <td>{formatMoney(row.saldoInicial)}</td>
+                              <td>{formatMoney(row.capital)}</td>
+                              <td>{formatMoney(row.interes)}</td>
+                              <td>{formatMoney(row.cuota)}</td>
+                              <td>{formatMoney(row.saldoFinal)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="oam-footnote">
+                      Valores estimados según la simulación actual. Pueden variar al radicar la solicitud.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

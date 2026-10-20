@@ -488,6 +488,8 @@ export type ProductoCreditoRow = {
 };
 
 export type ProductoAtributoRow = {
+  modoCalculo?: 'VALOR_FIJO' | 'PORCENTAJE' | 'FORMULA' | null;
+  tipoLimite?: 'MONTO' | 'EDAD';
   id: number;
   tipoAtributo: string;
   tipoCalculo: string;
@@ -816,6 +818,10 @@ export type SimulacionCredito = {
     valor: number | null;
     porcentaje: number | null;
     valorCalculado: number;
+    modoCalculo?: 'VALOR_FIJO' | 'PORCENTAJE' | 'FORMULA';
+    tipoLimite?: 'MONTO' | 'EDAD';
+    minimo?: number | null;
+    maximo?: number | null;
     aplicaIva: boolean;
     obligatorio: boolean;
     prioridad: number;

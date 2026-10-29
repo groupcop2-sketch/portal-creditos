@@ -414,7 +414,7 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
               <div className="result-stat-item"><span>Cargos financiados:</span><strong>{formatMoney(simulation.resumen.cargosFinanciados)}</strong></div>
               <div className="result-stat-item"><span>Capital real del crédito:</span><strong>{formatMoney(simulation.resumen.valorCredito)}</strong></div>
               {simulation.atributos.filter(a => a.sumaAlCredito || a.sumaALaCuota).map(a => <div className="result-stat-item" key={a.id}>
-                <span>{a.nombre}{a.sumaALaCuota ? ' (por cuota)' : ''}{a.aplicaIva ? ' (IVA incluido)' : ''}:</span><strong>{formatMoney(a.valorCalculado)}</strong>
+                <span>{a.nombre}{a.tipoLimite === 'EDAD' ? ' (edades ' + a.minimo + '-' + a.maximo + ')' : ''}{a.sumaALaCuota ? ' (por cuota)' : ''}{a.aplicaIva ? ' (IVA incluido)' : ''}:</span><strong>{formatMoney(a.valorCalculado)}</strong>
               </div>)}
             </div>}
             {/* CTA Button */}

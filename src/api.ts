@@ -1218,3 +1218,18 @@ export const api = {
     )
 };
 
+// ==========================================
+// ARQUITECTURA LIBRANZA & CONTABILIDAD NIIF
+// ==========================================
+export const libranzaWorkflowApi = {
+  getArquitectura: (token?: string) =>
+    request<any>('/api/v1/libranza/workflow/arquitectura', {}, token),
+
+  getEstado: (token: string, creditoId: number) =>
+    request<any>(`/api/v1/libranza/workflow/${creditoId}/estado`, {}, token),
+
+  getEstadoCuenta: (token: string, creditoId: number) =>
+    request<any>(`/api/v1/libranza/workflow/${creditoId}/estado-cuenta`, {}, token)
+};
+
+

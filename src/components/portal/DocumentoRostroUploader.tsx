@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useId, useState, useRef } from 'react';
 import { api } from '../../api';
 
 interface DocumentoRostroUploaderProps {
@@ -80,6 +80,7 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
     loading: false
   });
 
+  const formId = useId();
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -200,7 +201,7 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="doc-uploader-form">
+      <form id={formId} onSubmit={handleSubmit} className="doc-uploader-form">
         <div className="doc-slots-grid">
           {/* SLOT 1: FRENTE CEDULA */}
           <div className={`doc-slot-card ${frente.previewUrl ? 'has-file' : ''}`}>
@@ -342,28 +343,29 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
           </div>
         </div>
 
-        {/* Actions Footer */}
-        <div className="doc-uploader-actions">
-          {showCancelButton && onCancel && (
-            <button
-              type="button"
-              className="btn-secondary-ghost"
-              onClick={onCancel}
-              disabled={submitting}
-            >
-              Cancelar
-            </button>
-          )}
-
-          <button
-            type="submit"
-            className="portal-btn-primary glow-pulse"
-            disabled={!isFormValid || submitting}
-          >
-            {submitting ? 'Subiendo imágenes a AWS S3...' : 'Guardar y Subir a AWS S3 ➔'}
-          </button>
-        </div>
       </form>
+
+      <div className="doc-uploader-actions">
+        {showCancelButton && onCancel && (
+          <button
+            type="button"
+            className="btn-secondary-ghost"
+            onClick={onCancel}
+            disabled={submitting}
+          >
+            Cancelar
+          </button>
+        )}
+
+        <button
+          type="submit"
+          form={formId}
+          className="portal-btn-primary glow-pulse"
+          disabled={!isFormValid || submitting}
+        >
+          {submitting ? 'Subiendo imágenes a AWS S3...' : 'Guardar y Subir a AWS S3 ➔'}
+        </button>
+      </div>
     </div>
   );
 };

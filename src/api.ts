@@ -1174,6 +1174,7 @@ export const api = {
       jumioConfigurado: boolean;
       datacenter: string;
       permiteCargaManual: boolean;
+      s3Activo?: boolean;
       s3Bucket?: string;
       s3Region?: string;
       s3Arn?: string;

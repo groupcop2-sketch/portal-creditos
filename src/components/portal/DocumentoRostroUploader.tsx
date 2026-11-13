@@ -85,10 +85,12 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [s3BucketArn, setS3BucketArn] = useState('arn:aws:s3:::s3-demo-financiera-009040764532-us-east-2-an');
+  const [isS3Active, setIsS3Active] = useState<boolean>(false);
 
   React.useEffect(() => {
     api.obtenerConfigJumio(creditoId)
       .then((cfg) => {
+        setIsS3Active(Boolean(cfg?.s3Activo));
         if (cfg?.s3Arn) {
           setS3BucketArn(cfg.s3Arn);
         } else if (cfg?.s3Bucket) {
@@ -162,7 +164,12 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
 
       const res = await api.cargarDocumentosJumio(effectiveToken, payload);
 
-      setSuccessMessage('¡Documentos y fotografía subidos exitosamente a AWS S3! Tu crédito ha avanzado a Estudio.');
+      const isS3 = res?.almacenamiento === 'AWS_S3';
+      setSuccessMessage(
+        isS3
+          ? '¡Documentos y fotografía subidos exitosamente a AWS S3! Tu crédito ha avanzado a Estudio.'
+          : '¡Documentos y fotografía guardados exitosamente en Supabase (Base64)! Tu crédito ha avanzado a Estudio.'
+      );
       setTimeout(() => {
         onSuccess(res);
       }, 1200);
@@ -182,9 +189,25 @@ export const DocumentoRostroUploader: React.FC<DocumentoRostroUploaderProps> = (
         <div>
           <h3 className="doc-uploader-title">{title}</h3>
           <p className="doc-uploader-subtitle">{subtitle}</p>
-          <div className="s3-target-badge" style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#38bdf8', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '3px 10px', borderRadius: '20px' }}>
-            <span>☁️ Bucket S3:</span>
-            <code style={{ fontSize: '0.75rem', color: '#e0f2fe' }}>{s3BucketArn}</code>
+          <div
+            className="s3-target-badge"
+            style={{
+              marginTop: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.78rem',
+              color: isS3Active ? '#38bdf8' : '#10b981',
+              background: isS3Active ? 'rgba(14, 165, 233, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+              border: `1px solid ${isS3Active ? 'rgba(56, 189, 248, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
+              padding: '3px 10px',
+              borderRadius: '20px'
+            }}
+          >
+            <span>{isS3Active ? '☁️ Bucket S3:' : '⚡ Almacenamiento Supabase:'}</span>
+            <code style={{ fontSize: '0.75rem', color: isS3Active ? '#e0f2fe' : '#a7f3d0' }}>
+              {isS3Active ? s3BucketArn : 'Base64 Data URL (S3 Desactivado)'}
+            </code>
           </div>
         </div>
       </div>

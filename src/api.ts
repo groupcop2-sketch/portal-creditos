@@ -892,6 +892,23 @@ export type PortalProductoCredito = {
   tasaMensual: number | null;
 };
 
+export type TipoSoportePortal = 'CEDULA_FRENTE' | 'CEDULA_REVERSO' | 'FOTO_ROSTRO' | 'CERTIFICADO_COMPRA_CARTERA';
+
+export type PortalSoportesResponse = {
+  modalidad: 'EFECTIVO' | 'COMPRA_CARTERA' | 'MIXTO';
+  compras: Array<{ id: number; entidad: string; valor: number }>;
+  faltantes: Array<{ tipo: TipoSoportePortal; idCompraCartera: number | null }>;
+  soportes: Array<{
+    id: number;
+    idCompraCartera: number | null;
+    tipo: TipoSoportePortal;
+    nombreArchivo: string;
+    estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+    observacion: string | null;
+    fechaCarga: string;
+  }>;
+};
+
 export type PortalCreditosResponse = {
   resumen: {
     activos: number;
@@ -1153,6 +1170,13 @@ export const api = {
     request<PortalCliente>('/api/v1/portal/perfil-laboral', { method: 'PUT', body: JSON.stringify(body) }, token),
   listPortalProductos: (token: string) => request<PortalProductoCredito[]>('/api/v1/portal/productos', {}, token),
   listPortalCreditos: (token: string) => request<PortalCreditosResponse>('/api/v1/portal/creditos', {}, token),
+  listSoportesCredito: (token: string, creditoId: number) =>
+    request<PortalSoportesResponse>(`/api/v1/portal/creditos/${creditoId}/soportes`, {}, token),
+  subirSoporteCredito: (
+    token: string,
+    creditoId: number,
+    body: { tipo: TipoSoportePortal; idCompraCartera?: number | null; archivo: { nombre: string; mimeType: string; base64: string } }
+  ) => request<PortalSoportesResponse>(`/api/v1/portal/creditos/${creditoId}/soportes`, { method: 'POST', body: JSON.stringify(body) }, token),
   simularProductoPublico: (body: { idProductoCredito: number; montoSolicitado: number; plazo: number }) => request<SimulacionCredito>('/api/v1/portal/simulacion', { method: 'POST', body: JSON.stringify(body) }),
   simularPortalCredito: (token: string, body: unknown) => request<SimulacionCredito>('/api/v1/portal/simular', { method: 'POST', body: JSON.stringify(body) }, token),
   crearSolicitudPortal: (token: string, body: unknown) => request<CreditoRow & { jumio?: any }>('/api/v1/portal/solicitudes', { method: 'POST', body: JSON.stringify(body) }, token),

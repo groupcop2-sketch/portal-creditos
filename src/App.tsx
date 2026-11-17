@@ -401,6 +401,8 @@ export default function App() {
         montoSolicitado: Number(formData.montoSolicitado || formData.monto),
         plazo: Number(formData.plazo),
         codigoVendedor: formData.codigoVendedor || '',
+        modalidad: formData.modalidad || 'EFECTIVO',
+        comprasCartera: formData.comprasCartera || [],
         aceptaTerminos: true
       });
 

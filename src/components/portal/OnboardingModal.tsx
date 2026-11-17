@@ -8,6 +8,24 @@ import {
 } from '../../api';
 import { DocumentoRostroUploader } from './DocumentoRostroUploader';
 
+type Modalidad = 'EFECTIVO' | 'COMPRA_CARTERA' | 'MIXTO';
+type CompraCartera = { entidad: string; valor: number; archivo: File | null };
+
+const MAX_ARCHIVO_BYTES = 8 * 1024 * 1024;
+const MODALIDADES: Array<{ value: Modalidad; label: string; hint: string }> = [
+  { value: 'EFECTIVO', label: 'Efectivo', hint: 'Recibes todo el dinero en tu cuenta' },
+  { value: 'COMPRA_CARTERA', label: 'Compra de cartera', hint: 'Pagamos tus deudas con otras entidades' },
+  { value: 'MIXTO', label: 'Mixto', hint: 'Pagamos tus deudas y el resto va a tu cuenta' }
+];
+
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error(`No se pudo leer ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+
 export interface OnboardingInitialData {
   monto: number;
   plazo: number;
@@ -70,6 +88,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     initialData.idProductoCredito ? String(initialData.idProductoCredito) : ''
   );
   const [codigoVendedor, setCodigoVendedor] = useState('');
+  const [modalidad, setModalidad] = useState<Modalidad>('EFECTIVO');
+  const [compras, setCompras] = useState<CompraCartera[]>([]);
+  const totalCompras = compras.reduce((sum, item) => sum + (item.valor || 0), 0);
+
+  // In pure portfolio purchase the requested amount is exactly the sum of the debts.
+  useEffect(() => {
+    if (modalidad === 'COMPRA_CARTERA' && totalCompras > 0) setMonto(totalCompras);
+  }, [modalidad, totalCompras]);
+
+  const elegirModalidad = (value: Modalidad) => {
+    setModalidad(value);
+    if (value === 'EFECTIVO') setCompras([]);
+    else if (compras.length === 0) setCompras([{ entidad: '', valor: 0, archivo: null }]);
+  };
+  const updateCompra = (index: number, patch: Partial<CompraCartera>) =>
+    setCompras((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
 
   // Personal data
   const [idTipoIdentificacion, setIdTipoIdentificacion] = useState<string>('');
@@ -168,6 +202,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       setErrorMessage(`El monto debe estar entre ${formatMoney(selectedProd?.montoMinimo || 1000000)} y ${formatMoney(selectedProd?.montoMaximo || 50000000)}.`);
       return;
     }
+    if (modalidad !== 'EFECTIVO') {
+      const incompleta = compras.findIndex((item) => item.entidad.trim().length < 2 || !(item.valor > 0) || !item.archivo);
+      if (incompleta >= 0) {
+        setErrorMessage(`Completa la deuda ${incompleta + 1}: entidad, valor a pagar y certificado de deuda.`);
+        return;
+      }
+      const grande = compras.find((item) => item.archivo && item.archivo.size > MAX_ARCHIVO_BYTES);
+      if (grande) {
+        setErrorMessage(`El certificado "${grande.archivo!.name}" supera 8 MB.`);
+        return;
+      }
+      if (modalidad === 'MIXTO' && totalCompras >= monto) {
+        setErrorMessage('En mixto, la suma de las deudas debe ser menor al monto solicitado para que recibas una parte en efectivo.');
+        return;
+      }
+    }
     setErrorMessage('');
     // If logged in and profile complete, jump straight to review
     if (cliente && cliente.perfilCompleto) {
@@ -243,6 +293,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         plazo,
         idProductoCredito: Number(idProductoCredito) || selectedProd?.id,
         codigoVendedor: codigoVendedor ? codigoVendedor.toUpperCase() : null,
+        modalidad,
+        comprasCartera: await Promise.all(
+          compras.map(async (item) => ({
+            entidad: item.entidad.trim(),
+            valor: item.valor,
+            archivo: { nombre: item.archivo!.name, mimeType: item.archivo!.type, base64: await fileToBase64(item.archivo!) }
+          }))
+        ),
         // personal
         idTipoIdentificacion: idTipoIdentificacion ? Number(idTipoIdentificacion) : defaultTipId,
         identificacion,
@@ -420,6 +478,78 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   onChange={(e) => setPlazo(Number(e.target.value))}
                 />
               </div>
+
+              {/* Disbursement mode: cash, portfolio purchase or mixed */}
+              <div className="form-field full-width">
+                <label className="field-label-bold" id="modalidad-label">¿Cómo quieres recibir tu crédito?</label>
+                <div className="modalidad-options" role="radiogroup" aria-labelledby="modalidad-label">
+                  {MODALIDADES.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={modalidad === opt.value}
+                      className={`modalidad-option ${modalidad === opt.value ? 'active' : ''}`}
+                      onClick={() => elegirModalidad(opt.value)}
+                    >
+                      <strong>{opt.label}</strong>
+                      <small>{opt.hint}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {modalidad !== 'EFECTIVO' && (
+                <div className="form-field full-width compras-cartera">
+                  <label className="field-label-bold">Deudas que quieres que paguemos por ti:</label>
+                  {compras.map((compra, index) => (
+                    <div className="compra-row" key={index}>
+                      <input
+                        type="text"
+                        className="portal-input-text"
+                        placeholder="Entidad (banco, cooperativa…)"
+                        aria-label={`Entidad de la deuda ${index + 1}`}
+                        value={compra.entidad}
+                        onChange={(e) => updateCompra(index, { entidad: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className="portal-input-text"
+                        placeholder="Valor a pagar"
+                        aria-label={`Valor a pagar de la deuda ${index + 1}`}
+                        value={compra.valor ? compra.valor.toLocaleString('es-CO') : ''}
+                        onChange={(e) => updateCompra(index, { valor: Number(e.target.value.replace(/[^\d]/g, '')) || 0 })}
+                      />
+                      <label className={`compra-file ${compra.archivo ? 'has-file' : ''}`}>
+                        <input
+                          type="file"
+                          accept="application/pdf,image/jpeg,image/png,image/webp"
+                          onChange={(e) => updateCompra(index, { archivo: e.target.files?.[0] ?? null })}
+                        />
+                        <span>{compra.archivo ? compra.archivo.name : 'Adjuntar certificado de deuda (PDF o foto)'}</span>
+                      </label>
+                      {compras.length > 1 && (
+                        <button type="button" className="compra-remove" aria-label={`Quitar deuda ${index + 1}`} onClick={() => setCompras((current) => current.filter((_, i) => i !== index))}>
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {compras.length < 5 && (
+                    <button type="button" className="compra-add" onClick={() => setCompras((current) => [...current, { entidad: '', valor: 0, archivo: null }])}>
+                      + Agregar otra deuda
+                    </button>
+                  )}
+                  <div className="compra-summary">
+                    <span>Compra de cartera: <strong>{formatMoney(totalCompras)}</strong></span>
+                    {modalidad === 'MIXTO' && (
+                      <span>Efectivo para ti: <strong>{formatMoney(Math.max(0, monto - totalCompras))}</strong></span>
+                    )}
+                    {modalidad === 'COMPRA_CARTERA' && <small>El monto del crédito se ajusta a la suma de tus deudas.</small>}
+                  </div>
+                </div>
+              )}
 
               {/* Optional Advisor Code */}
               <div className="form-field full-width">
@@ -879,6 +1009,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 <div className="summary-item">
                   <span className="s-label">Monto Solicitado:</span>
                   <strong className="s-value text-accent">{formatMoney(monto)}</strong>
+                </div>
+                <div className="summary-item">
+                  <span className="s-label">Modalidad:</span>
+                  <strong className="s-value">
+                    {MODALIDADES.find((opt) => opt.value === modalidad)?.label}
+                    {modalidad !== 'EFECTIVO' && ` · ${compras.length} deuda(s) por ${formatMoney(totalCompras)}`}
+                  </strong>
                 </div>
                 <div className="summary-item">
                   <span className="s-label">Plazo Elegido:</span>

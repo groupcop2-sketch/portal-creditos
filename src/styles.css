@@ -7705,3 +7705,241 @@ body.light-theme .doc-uploader-actions .btn-secondary-ghost,
 
 
 
+
+/* ===== Modalidad del crédito y compra de cartera ===== */
+.modalidad-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.modalidad-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.modalidad-option small {
+  opacity: 0.75;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.modalidad-option:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.modalidad-option.active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.compras-cartera {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compra-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.compra-file {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+
+.compra-file input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.compra-file span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compra-file:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.compra-file.has-file {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--feedback-success) 60%, transparent);
+}
+
+.compra-remove,
+.compra-add {
+  justify-self: start;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compra-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font-size: 0.9rem;
+}
+
+.compra-summary small {
+  width: 100%;
+  opacity: 0.75;
+}
+
+@media (max-width: 560px) {
+  .compra-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Mis documentos (carga y recarga) ===== */
+.mis-docs-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mis-docs h2 {
+  margin: 0 0 6px;
+  font-size: 1.25rem;
+}
+
+.mis-docs-intro {
+  margin: 0 0 16px;
+  opacity: 0.8;
+}
+
+.mis-docs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mis-doc {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.mis-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mis-doc-info small {
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mis-doc-info .mis-doc-motivo {
+  opacity: 1;
+  color: var(--feedback-error);
+  white-space: normal;
+}
+
+.mis-doc-estado {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.estado-aprobado .mis-doc-estado { color: var(--feedback-success); background: color-mix(in srgb, var(--feedback-success) 14%, transparent); }
+.estado-rechazado .mis-doc-estado,
+.estado-falta .mis-doc-estado { color: var(--feedback-error); background: color-mix(in srgb, var(--feedback-error) 14%, transparent); }
+.estado-rechazado,
+.estado-falta { border-color: color-mix(in srgb, var(--feedback-error) 40%, transparent); }
+
+.mis-doc-upload {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mis-doc-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.mis-doc-upload:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.mis-docs-error {
+  margin: 12px 0 0;
+  color: var(--feedback-error);
+}
+
+@media (max-width: 560px) {
+  .mis-doc {
+    grid-template-columns: 1fr auto;
+  }
+
+  .mis-doc-upload {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}

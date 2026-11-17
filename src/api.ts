@@ -1226,6 +1226,7 @@ export const api = {
       creditoId: number;
       estado: string;
       decision: string;
+      almacenamiento?: 'AWS_S3' | 'SUPABASE_BASE64';
       s3?: {
         bucket: string;
         arn: string;

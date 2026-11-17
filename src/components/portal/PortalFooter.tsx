@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Lock, Award, HeartHandshake, Phone, Mail, Clock, HelpCircle, FileText } from 'lucide-react';
+import { useBranding } from '../../branding';
 
 interface PortalFooterProps {
   onOpenSimulador?: () => void;
@@ -12,6 +13,7 @@ export const PortalFooter: React.FC<PortalFooterProps> = ({
   onOpenRequisitos,
   onOpenPreguntas
 }) => {
+  const branding = useBranding();
   return (
     <footer className="portal-footer">
       {/* Top Trust Banner */}
@@ -73,7 +75,7 @@ export const PortalFooter: React.FC<PortalFooterProps> = ({
                   <Award size={22} className="portal-logo-symbol" />
                 </div>
                 <div>
-                  <div className="portal-logo-text">CrediYa</div>
+                  <div className="portal-logo-text">{branding.nombreComercial}</div>
                   <div className="portal-logo-sub">PORTAL DE CRÉDITOS DIGITAL</div>
                 </div>
               </div>
@@ -142,7 +144,7 @@ export const PortalFooter: React.FC<PortalFooterProps> = ({
 
           <div className="portal-footer-bottom">
             <div className="portal-footer-copy">
-              © {new Date().getFullYear()} CrediYa Soluciones Financieras S.A.S. Todos los derechos reservados.
+              © {new Date().getFullYear()} {branding.nombreComercial}. Todos los derechos reservados.
             </div>
             <div className="portal-footer-legal-micro">
               * La tasa de interés otorgada dependerá del convenio empleador, capacidad de endeudamiento del solicitante y perfil crediticio validado ante operadores de información. El desembolso se realiza a la cuenta bancaria de nómina certificada una vez confirmada la visación de la pagaduría.

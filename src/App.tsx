@@ -14,6 +14,7 @@ import { PortalFooter } from './components/portal/PortalFooter';
 import { OnboardingModal, type OnboardingInitialData } from './components/portal/OnboardingModal';
 import { AuthModal } from './components/portal/AuthModal';
 import { ClientDashboard } from './components/portal/ClientDashboard';
+import { shade, useBranding } from './branding';
 
 export default function App() {
   // Theme state
@@ -26,6 +27,17 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', themeMode);
     localStorage.setItem('portal_theme', themeMode);
   }, [themeMode]);
+
+  // Company brand (Super Admin → Plataforma). Lightened in dark mode so it stays readable on dark surfaces.
+  const branding = useBranding();
+  useEffect(() => {
+    const root = document.documentElement.style;
+    const base = themeMode === 'dark' ? shade(branding.colorPrimario, 0.35) : branding.colorPrimario;
+    root.setProperty('--portal-primary', base);
+    root.setProperty('--portal-primary-hover', shade(base, -0.15));
+    root.setProperty('--color-primary', base);
+    root.setProperty('--color-primary-dark', shade(base, -0.2));
+  }, [branding.colorPrimario, themeMode]);
 
   const toggleTheme = () => {
     setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'));

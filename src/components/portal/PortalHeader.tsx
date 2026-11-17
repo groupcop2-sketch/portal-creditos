@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PortalCliente } from '../../api';
+import { BrandMark, useBranding } from '../../branding';
 
 interface PortalHeaderProps {
   cliente: PortalCliente | null;
@@ -22,6 +23,7 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
   activeView,
   onNavigateView
 }) => {
+  const branding = useBranding();
   const getInitials = (name?: string) => {
     if (!name) return 'CL';
     const parts = name.trim().split(/\s+/);
@@ -40,10 +42,10 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
         {/* Brand Logo */}
         <div className="portal-header-brand" onClick={() => onNavigateView('landing')}>
           <div className="portal-brand-icon">
-            <span>CA</span>
+            <BrandMark branding={branding} className="" imgClassName="portal-brand-logo" />
           </div>
           <div className="portal-brand-text">
-            <strong>CrediApp</strong>
+            <strong>{branding.nombreComercial}</strong>
             <span className="brand-tag">Portal Clientes</span>
           </div>
         </div>

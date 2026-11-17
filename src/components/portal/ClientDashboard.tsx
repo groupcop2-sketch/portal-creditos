@@ -7,6 +7,7 @@ import {
   type PortalProductoCredito
 } from '../../api';
 import { DocumentoRostroUploader } from './DocumentoRostroUploader';
+import { MisDocumentosModal } from './MisDocumentosModal';
 import { DiditVerifyButton } from './DiditVerifyButton';
 
 interface ClientDashboardProps {
@@ -34,6 +35,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
 }) => {
   const [showLaborModal, setShowLaborModal] = useState(!cliente.perfilCompleto);
   const [showManualUploadModal, setShowManualUploadModal] = useState(false);
+  const [docsCredito, setDocsCredito] = useState<{ id: number; consecutivo: string } | null>(null);
   const [hasJumioConfig, setHasJumioConfig] = useState<boolean | null>(null);
   const [laborCodigoEmpresa, setLaborCodigoEmpresa] = useState(cliente.codigoEmpresa || '');
   const [laborCargo, setLaborCargo] = useState(cliente.cargo || '');
@@ -327,6 +329,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                   <th>Monto Solicitado</th>
                   <th>Plazo</th>
                   <th>Estado</th>
+                  <th>Documentos</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,6 +348,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                       <span className={`status-pill status-${c.estado.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                         {c.estado.replaceAll('_', ' ')}
                       </span>
+                    </td>
+                    <td>
+                      <button type="button" className="mis-docs-btn" disabled={!token} onClick={() => setDocsCredito({ id: c.id, consecutivo: c.consecutivo })}>
+                        Ver / cargar
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -504,6 +512,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {docsCredito && token && (
+        <MisDocumentosModal
+          token={token}
+          creditoId={docsCredito.id}
+          consecutivo={docsCredito.consecutivo}
+          formatMoney={formatMoney}
+          onClose={() => setDocsCredito(null)}
+        />
       )}
 
       {/* Manual Document and Face Upload Modal */}

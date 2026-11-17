@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, BadgeCheck, Eye, EyeOff, FileSignature, ShieldCheck, Wallet, X } from 'lucide-react';
 import type { PortalCatalogs } from '../../api';
+import { BrandMark, useBranding } from '../../branding';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -55,6 +57,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Forgot form
   const [forgotCorreo, setForgotCorreo] = useState('');
+  const branding = useBranding();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -138,20 +148,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="onboarding-modal-overlay">
-      <div className="auth-modal-card">
-        {/* Close Button */}
-        <button
-          type="button"
-          className="modal-close-btn"
-          onClick={onClose}
-          title="Cerrar modal"
-        >
-          ✕
+    <div className="onboarding-modal-overlay auth-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="auth-modal-card auth-split" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button type="button" className="modal-close-btn auth-close" onClick={onClose} aria-label="Cerrar">
+          <X size={16} aria-hidden="true" />
         </button>
 
+        {/* Brand panel (hidden on phones) */}
+        <aside className="auth-brand" aria-hidden="true">
+          <div className="auth-brand-top">
+            <BrandMark branding={branding} className="auth-brand-mark" imgClassName="auth-brand-logo" />
+            <div><strong>{branding.nombreComercial}</strong><span>Portal de clientes</span></div>
+          </div>
+          <div className="auth-brand-copy">
+            <h2>Tu crédito de libranza, en línea.</h2>
+            <p>Sigue tu solicitud en tiempo real y gestiona tus créditos sin filas ni papeles.</p>
+          </div>
+          <ul className="auth-brand-list">
+            <li><BadgeCheck size={18} /> <span>Consulta el estado de cada etapa</span></li>
+            <li><FileSignature size={18} /> <span>Firma tus documentos desde el celular</span></li>
+            <li><Wallet size={18} /> <span>Cuotas descontadas de tu nómina</span></li>
+          </ul>
+          <p className="auth-brand-secure"><ShieldCheck size={15} /> Conexión cifrada · Tus datos están protegidos</p>
+        </aside>
+
+        <div className="auth-main">
         {/* Tab Switcher */}
-        <div className="auth-tabs-header">
+        <div className="auth-tabs-header" role="tablist">
           <button
             type="button"
             className={`auth-tab-btn ${mode === 'login' ? 'active' : ''}`}
@@ -179,12 +202,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Notification Alerts */}
         {errorMessage && (
           <div className="onboarding-error-banner">
-            <span>⚠️ {errorMessage}</span>
+            <span role="alert">{errorMessage}</span>
           </div>
         )}
         {successMessage && (
           <div className="onboarding-success-banner">
-            <span>✓ {successMessage}</span>
+            <span role="status">{successMessage}</span>
           </div>
         )}
 
@@ -192,13 +215,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {mode === 'login' && (
           <form className="auth-form animate-fadeIn" onSubmit={handleLoginSubmit}>
             <div className="auth-header-copy">
-              <h3>Ingresa a tu cuenta</h3>
+              <h3 id="auth-title">Ingresa a tu cuenta</h3>
               <p>Consulta el estado de tus solicitudes y gestiona tus créditos activos.</p>
             </div>
 
             <div className="form-field full-width">
-              <label className="field-label-bold">Número de Cédula o Correo *</label>
+              <label className="field-label-bold" htmlFor="auth-login-id">Cédula o correo</label>
               <input
+                id="auth-login-id"
                 type="text"
                 className="portal-input-text"
                 placeholder="Ej. 1020304050 o usuario@correo.com"
@@ -211,7 +235,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             <div className="form-field full-width">
               <div className="label-with-value">
-                <label className="field-label-bold">Contraseña *</label>
+                <label className="field-label-bold" htmlFor="auth-login-pass">Contraseña</label>
                 <button
                   type="button"
                   className="link-subtle-small"
@@ -226,6 +250,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
               <div className="password-input-wrapper">
                 <input
+                  id="auth-login-pass"
                   type={showLoginPassword ? 'text' : 'password'}
                   className="portal-input-text"
                   placeholder="Tu contraseña"
@@ -238,8 +263,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   className="btn-toggle-eye"
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  aria-label={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showLoginPassword ? '👁️' : '👁️‍🗨️'}
+                  {showLoginPassword ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -249,7 +275,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               className="portal-btn-primary full-width"
               disabled={loading}
             >
-              {loading ? 'Ingresando...' : 'Iniciar Sesión ➔'}
+              {loading ? 'Ingresando…' : <>Iniciar sesión <ArrowRight size={17} aria-hidden="true" /></>}
             </button>
 
             <div className="auth-switch-note">
@@ -269,7 +295,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {mode === 'registro' && (
           <form className="auth-form animate-fadeIn" onSubmit={handleRegisterSubmit}>
             <div className="auth-header-copy">
-              <h3>Crea tu cuenta de cliente</h3>
+              <h3 id="auth-title">Crea tu cuenta de cliente</h3>
               <p>Regístrate en un minuto y accede a tu simulador y solicitudes.</p>
             </div>
 
@@ -367,8 +393,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   className="btn-toggle-eye"
                   onClick={() => setShowRegPassword(!showRegPassword)}
+                  aria-label={showRegPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showRegPassword ? '👁️' : '👁️‍🗨️'}
+                  {showRegPassword ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -398,14 +425,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {mode === 'forgot' && (
           <form className="auth-form animate-fadeIn" onSubmit={handleForgotSubmit}>
             <div className="auth-header-copy">
-              <h3>Recuperar Contraseña</h3>
+              <h3 id="auth-title">Recupera tu contraseña</h3>
               <p>Ingresa el correo electrónico con el que te registraste y te enviaremos un enlace seguro para restablecerla.</p>
             </div>
 
             <div className="form-field full-width">
-              <label className="field-label-bold">Correo Registrado *</label>
+              <label className="field-label-bold" htmlFor="auth-forgot-mail">Correo registrado</label>
               <input
+                id="auth-forgot-mail"
                 type="email"
+                autoComplete="email"
                 className="portal-input-text"
                 placeholder="ejemplo@correo.com"
                 value={forgotCorreo}
@@ -419,7 +448,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               className="portal-btn-primary full-width"
               disabled={loading}
             >
-              {loading ? 'Enviando...' : 'Enviar Enlace de Recuperación ➔'}
+              {loading ? 'Enviando…' : <>Enviar enlace de recuperación <ArrowRight size={17} aria-hidden="true" /></>}
             </button>
 
             <div className="auth-switch-note">
@@ -428,11 +457,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="link-btn-text"
                 onClick={() => setMode('login')}
               >
-                ◀ Volver a Iniciar Sesión
+                <ArrowLeft size={15} aria-hidden="true" /> Volver a iniciar sesión
               </button>
             </div>
           </form>
         )}
+        </div>
       </div>
     </div>
   );

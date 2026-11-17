@@ -5063,12 +5063,12 @@ th {
 
 .portal-input-text,
 .portal-input-select {
-  background: rgba(15, 23, 42, 0.75) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: var(--portal-input-bg) !important;
+  border: 1px solid var(--portal-input-border) !important;
   border-radius: 12px !important;
   padding: 11px 16px !important;
   font-size: 0.95rem !important;
-  color: #f8fafc !important;
+  color: var(--portal-text) !important;
   outline: none !important;
   transition: all 0.2s ease;
   width: 100% !important;
@@ -7705,3 +7705,438 @@ body.light-theme .doc-uploader-actions .btn-secondary-ghost,
 
 
 
+
+/* ===== Modalidad del crédito y compra de cartera ===== */
+.modalidad-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.modalidad-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.modalidad-option small {
+  opacity: 0.75;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.modalidad-option:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.modalidad-option.active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.compras-cartera {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compra-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.compra-file {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+
+.compra-file input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.compra-file span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compra-file:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.compra-file.has-file {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--feedback-success) 60%, transparent);
+}
+
+.compra-remove,
+.compra-add {
+  justify-self: start;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compra-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font-size: 0.9rem;
+}
+
+.compra-summary small {
+  width: 100%;
+  opacity: 0.75;
+}
+
+@media (max-width: 560px) {
+  .compra-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Mis documentos (carga y recarga) ===== */
+.mis-docs-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mis-docs h2 {
+  margin: 0 0 6px;
+  font-size: 1.25rem;
+}
+
+.mis-docs-intro {
+  margin: 0 0 16px;
+  opacity: 0.8;
+}
+
+.mis-docs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mis-doc {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.mis-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mis-doc-info small {
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mis-doc-info .mis-doc-motivo {
+  opacity: 1;
+  color: var(--feedback-error);
+  white-space: normal;
+}
+
+.mis-doc-estado {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.estado-aprobado .mis-doc-estado { color: var(--feedback-success); background: color-mix(in srgb, var(--feedback-success) 14%, transparent); }
+.estado-rechazado .mis-doc-estado,
+.estado-falta .mis-doc-estado { color: var(--feedback-error); background: color-mix(in srgb, var(--feedback-error) 14%, transparent); }
+.estado-rechazado,
+.estado-falta { border-color: color-mix(in srgb, var(--feedback-error) 40%, transparent); }
+
+.mis-doc-upload {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mis-doc-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.mis-doc-upload:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.mis-docs-error {
+  margin: 12px 0 0;
+  color: var(--feedback-error);
+}
+
+@media (max-width: 560px) {
+  .mis-doc {
+    grid-template-columns: 1fr auto;
+  }
+
+  .mis-doc-upload {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
+.portal-brand-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; background: #fff; padding: 3px; }
+
+/* ==========================================================================
+   DAY MODE FIXES (the portal was designed dark-first: light text was hardcoded)
+   ========================================================================== */
+:root[data-theme='light'] .hero-main-title { color: var(--portal-text); }
+:root[data-theme='light'] .hero-description { color: var(--portal-text-muted); }
+:root[data-theme='light'] .hero-feature-item {
+  background: var(--portal-card-bg);
+  border-color: var(--portal-card-border);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+:root[data-theme='light'] .hero-feature-item strong { color: var(--portal-text); }
+:root[data-theme='light'] .hero-feature-item p,
+:root[data-theme='light'] .proof-text span { color: var(--portal-text-muted); }
+:root[data-theme='light'] .text-gradient { background: linear-gradient(135deg, #0369a1 0%, #0891b2 55%, #4f46e5 100%); -webkit-background-clip: text; background-clip: text; }
+
+:root[data-theme='light'] .dashboard-metric-card {
+  background: var(--portal-card-bg);
+  border-color: var(--portal-card-border);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+}
+:root[data-theme='light'] .dashboard-metric-card:hover { box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1); }
+:root[data-theme='light'] .metric-value { color: var(--portal-text); }
+:root[data-theme='light'] .metric-label { color: var(--portal-text-muted); }
+:root[data-theme='light'] .metric-sub { color: var(--portal-text-muted); }
+
+/* Header: keep brand and links on one line; drop landing anchors when space runs out. */
+.portal-brand-text strong,
+.portal-header-nav a,
+.portal-header-nav .nav-link-btn { white-space: nowrap; }
+.portal-header-brand { flex-shrink: 0; }
+.user-badge-info { min-width: 0; }
+.user-company { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+@media (max-width: 1240px) {
+  .portal-header-nav a[href^='#'] { display: none; }
+}
+
+/* ==========================================================================
+   AUTH MODAL (sign in / sign up / recover): brand panel + form, both themes
+   ========================================================================== */
+.auth-overlay { background: rgba(4, 10, 20, 0.62); }
+.auth-modal-card.auth-split {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  width: 100%;
+  max-width: 920px;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--portal-bg);
+  border: 1px solid var(--portal-card-border);
+  box-shadow: 0 30px 80px rgba(2, 8, 23, 0.45);
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.auth-split .auth-close {
+  background: var(--portal-card-bg) !important;
+  border: 1px solid var(--portal-card-border) !important;
+  color: var(--portal-text-muted) !important;
+  box-shadow: none !important;
+}
+.auth-split .auth-close:hover { color: var(--portal-text) !important; }
+
+.auth-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 36px 32px;
+  color: #ffffff;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.16) 0%, transparent 55%),
+    linear-gradient(160deg, color-mix(in srgb, var(--portal-primary) 80%, #020617) 0%, var(--portal-primary) 55%, #0e7490 100%);
+  overflow: hidden;
+}
+.auth-brand::after {
+  content: '';
+  position: absolute;
+  right: -90px;
+  bottom: -90px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 42px solid rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+.auth-brand-top { display: flex; align-items: center; gap: 12px; }
+.auth-brand-top strong { display: block; font-family: 'Outfit', sans-serif; font-size: 1.15rem; line-height: 1.1; }
+.auth-brand-top span { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+.auth-brand-mark {
+  width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.28);
+  font: 800 1rem 'Outfit', sans-serif; color: #ffffff;
+}
+.auth-brand-logo { height: 44px; max-width: 120px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 4px; }
+.auth-brand-copy h2 { margin: 0 0 8px; font-family: 'Outfit', sans-serif; font-size: 1.75rem; line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
+.auth-brand-copy p { margin: 0; font-size: 0.92rem; line-height: 1.55; opacity: 0.88; }
+.auth-brand-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-size: 0.9rem; }
+.auth-brand-list li { display: flex; align-items: center; gap: 10px; }
+.auth-brand-list svg { flex-shrink: 0; padding: 6px; width: 30px; height: 30px; border-radius: 9px; background: rgba(255, 255, 255, 0.16); }
+.auth-brand-secure { margin: auto 0 0; display: flex; align-items: center; gap: 6px; font-size: 0.78rem; opacity: 0.8; }
+
+.auth-main { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; padding: 28px 32px 30px; }
+.auth-split .auth-tabs-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-right: 40px;
+  border: 1px solid var(--portal-card-border);
+  border-radius: 12px;
+  background: var(--portal-card-bg);
+}
+.auth-split .auth-tab-btn {
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  color: var(--portal-text-muted);
+  background: transparent;
+}
+.auth-split .auth-tab-btn:hover { color: var(--portal-text); }
+.auth-split .auth-tab-btn.active {
+  color: var(--portal-text);
+  background: var(--portal-bg);
+  border-bottom-color: transparent;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12), 0 0 0 1px var(--portal-card-border);
+}
+.auth-split .auth-form { padding: 24px 0 0; gap: 16px; }
+.auth-split .auth-header-copy h3 { color: var(--portal-text); font-size: 1.5rem; }
+.auth-split .auth-header-copy p { color: var(--portal-text-muted); line-height: 1.5; }
+.auth-split .field-label-bold { color: var(--portal-text); text-transform: none; letter-spacing: 0; font-size: 0.85rem; }
+.auth-split .portal-input-text,
+.auth-split .portal-input-select {
+  min-height: 46px;
+  border-radius: 11px;
+  background: var(--portal-input-bg);
+  border: 1px solid var(--portal-input-border);
+  color: var(--portal-text);
+}
+.auth-split .portal-input-text:focus,
+.auth-split .portal-input-select:focus {
+  border-color: var(--portal-primary);
+  box-shadow: 0 0 0 4px var(--portal-input-focus);
+  outline: none;
+}
+.auth-split .label-with-value { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.auth-split .link-subtle-small,
+.auth-split .link-btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--portal-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-split .link-subtle-small:hover,
+.auth-split .link-btn-text:hover { text-decoration: underline; background: none; }
+.auth-split .btn-toggle-eye {
+  display: grid;
+  place-items: center;
+  color: var(--portal-text-muted);
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.auth-split .btn-toggle-eye:hover { color: var(--portal-text); }
+.auth-split .portal-btn-primary { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; font-size: 0.95rem; }
+.auth-split .auth-switch-note { color: var(--portal-text-muted); font-size: 0.86rem; text-align: center; }
+.auth-split .onboarding-error-banner,
+.auth-split .onboarding-success-banner { margin: 16px 0 0; border-radius: 10px; }
+.auth-split :is(button, input, select):focus-visible { outline: 2px solid var(--portal-primary); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .auth-modal-card.auth-split { grid-template-columns: 1fr; max-width: 460px; }
+  .auth-brand { display: none; }
+  .auth-main { padding: 24px 20px 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-modal-card.auth-split { animation: none; }
+}
+
+/* Night: the brand color is lightened for text contrast, so deepen it again for the brand panel. */
+:root:not([data-theme='light']) .auth-brand {
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.10) 0%, transparent 55%),
+    linear-gradient(160deg, #0a1a33 0%, #0d2c4d 55%, #0b4f63 100%);
+}
+:root:not([data-theme='light']) .auth-split .link-subtle-small,
+:root:not([data-theme='light']) .auth-split .link-btn-text { color: #7dd3fc; }
